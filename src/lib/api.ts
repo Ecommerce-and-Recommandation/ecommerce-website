@@ -90,12 +90,76 @@ export interface HealthResponse {
     models: string[];
 }
 
-// ── API functions ──────────────────────────────────────
+// ── Shop Types ─────────────────────────────────────────
+
+export interface ShopProduct {
+    id: number;
+    stock_code: string;
+    name: string;
+    description: string;
+    price: number;
+    image_url: string;
+    category: string;
+    in_stock: boolean;
+    purchase_count: number;
+}
+
+export interface ProductListResponse {
+    products: ShopProduct[];
+    total: number;
+    page: number;
+    page_size: number;
+}
+
+export interface CategoryInfo {
+    name: string;
+    count: number;
+}
+
+export interface CartItemData {
+    id: number;
+    product_id: number;
+    quantity: number;
+    product_name: string;
+    product_price: number;
+    product_image: string;
+    stock_code: string;
+}
+
+export interface CartResponse {
+    items: CartItemData[];
+    total: number;
+    item_count: number;
+}
+
+export interface ShopRecommendation {
+    id: number;
+    stock_code: string;
+    name: string;
+    price: number;
+    image_url: string;
+    category: string;
+    similarity: number;
+}
+
+export interface BehaviorRecommendationsResponse {
+    source: 'knn' | 'popular';
+    source_product: string | null;
+    recommendations: ShopRecommendation[];
+}
+
+export interface BehaviorProfileResponse {
+    rfm_features: Record<string, number | string>;
+    prediction: PredictionResponse;
+}
+
+// ── Admin ML API ───────────────────────────────────────
 
 export const mlApi = {
     health: () => api.get<HealthResponse>('/health').then((r) => r.data),
 
-    predictPurchase: (features: CustomerFeatures) => api.post<PredictionResponse>('/predict/purchase', features).then((r) => r.data),
+    predictPurchase: (features: CustomerFeatures) =>
+        api.post<PredictionResponse>('/predict/purchase', features).then((r) => r.data),
 
     recommend: (stockCode: string, topK = 10) =>
         api
@@ -104,9 +168,35 @@ export const mlApi = {
             })
             .then((r) => r.data),
 
-    segmentCustomer: (features: CustomerFeatures) => api.post<SegmentInfo>('/segment/customer', features).then((r) => r.data),
+    segmentCustomer: (features: CustomerFeatures) =>
+        api.post<SegmentInfo>('/segment/customer', features).then((r) => r.data),
 
     segmentsOverview: () => api.get<SegmentOverviewResponse>('/segments/overview').then((r) => r.data),
 
     modelInfo: () => api.get<ModelInfoResponse>('/models/info').then((r) => r.data),
+};
+
+// ── Shop API ───────────────────────────────────────────
+
+export const shopApi = {
+    products: (params: { category?: string; search?: string; page?: number; page_size?: number }) =>
+        api.get<ProductListResponse>('/products', { params }).then((r) => r.data),
+
+    product: (id: number) => api.get<ShopProduct>(`/products/${id}`).then((r) => r.data),
+
+    categories: () => api.get<CategoryInfo[]>('/products/categories').then((r) => r.data),
+
+    cart: () => api.get<CartResponse>('/cart').then((r) => r.data),
+
+    addToCart: (product_id: number, quantity = 1) =>
+        api.post<CartItemData>('/cart', { product_id, quantity }).then((r) => r.data),
+
+    updateCartItem: (itemId: number, quantity: number) =>
+        api.patch(`/cart/${itemId}`, { quantity }).then((r) => r.data),
+
+    removeFromCart: (itemId: number) => api.delete(`/cart/${itemId}`).then((r) => r.data),
+
+    recommendations: () => api.get<BehaviorRecommendationsResponse>('/behavior/recommendations').then((r) => r.data),
+
+    behaviorProfile: () => api.get<BehaviorProfileResponse>('/behavior/profile').then((r) => r.data),
 };

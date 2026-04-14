@@ -10,7 +10,7 @@ import { Loader2, Users } from 'lucide-react';
 
 const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'];
 
-export const Route = createFileRoute('/segmentation')({
+export const Route = createFileRoute('/admin/segmentation')({
     component: SegmentationPage,
 });
 

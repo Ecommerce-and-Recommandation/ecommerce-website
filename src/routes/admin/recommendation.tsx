@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useRecommendations } from '@/lib/hooks';
 import { Loader2, Package, Search } from 'lucide-react';
 
-export const Route = createFileRoute('/recommendation')({
+export const Route = createFileRoute('/admin/recommendation')({
     component: RecommendationPage,
 });
 

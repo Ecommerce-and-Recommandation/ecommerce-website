@@ -1,218 +1,173 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useModelInfo, useSegmentsOverview } from '@/lib/hooks';
-import { BarChart3, Brain, Package, TrendingUp, Users, Loader2 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { createFileRoute, Link, useSearch } from '@tanstack/react-router';
+import { useProducts, useCategories, useShopRecommendations } from '@/lib/hooks';
+import { useState, useEffect } from 'react';
+import { Loader2, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { tracker } from '@/lib/tracker';
+import type { ShopProduct } from '@/lib/api';
 
-const SEGMENT_COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'];
+interface SearchParams {
+    search?: string;
+}
 
-export const Route = createFileRoute('/')({
-    component: DashboardPage,
-});
+function ShopHomePage() {
+    const searchParams = useSearch({ from: '/' }) as SearchParams;
+    const [category, setCategory] = useState<string>('');
+    const [page, setPage] = useState(1);
+    const searchQuery = searchParams.search || '';
 
-function DashboardPage() {
-    const { data: modelInfo, isLoading: loadingModel } = useModelInfo();
-    const { data: segments, isLoading: loadingSeg } = useSegmentsOverview();
+    const { data: categories } = useCategories();
+    const { data: productData, isLoading } = useProducts({
+        category: category || undefined,
+        search: searchQuery || undefined,
+        page,
+        page_size: 20,
+    });
+    const { data: recs } = useShopRecommendations();
 
-    if (loadingModel || loadingSeg) {
-        return (
-            <div className="flex h-96 items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
+    useEffect(() => { setPage(1); }, [category, searchQuery]);
 
-    const metrics = modelInfo?.metrics;
+    const totalPages = productData ? Math.ceil(productData.total / productData.page_size) : 1;
 
     return (
         <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                <p className="text-muted-foreground">Tổng quan hệ thống E-commerce ML Models</p>
+            {/* Recommendations Section */}
+            {recs && recs.recommendations.length > 0 && (
+                <section>
+                    <div className="mb-4 flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-amber-400" />
+                        <h2 className="text-xl font-bold text-white">
+                            {recs.source === 'knn' ? 'Recommended for You' : 'Popular Products'}
+                        </h2>
+                        {recs.source === 'knn' && (
+                            <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+                                AI Powered
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex gap-4 overflow-x-auto pb-2">
+                        {recs.recommendations.slice(0, 6).map((r) => (
+                            <Link
+                                key={r.stock_code}
+                                to="/products/$productId"
+                                params={{ productId: String(r.id) }}
+                                onClick={() => tracker.trackClickRecommendation(r.id, recs.source)}
+                                className="group flex w-44 shrink-0 flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition-all hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10"
+                            >
+                                <div className="relative h-36 overflow-hidden bg-slate-800">
+                                    <img
+                                        src={r.image_url}
+                                        alt={r.name}
+                                        className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                                        loading="lazy"
+                                    />
+                                </div>
+                                <div className="p-3">
+                                    <p className="line-clamp-2 text-xs font-medium text-slate-300">{r.name}</p>
+                                    <p className="mt-1 text-sm font-bold text-emerald-400">£{r.price.toFixed(2)}</p>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Category Filters */}
+            <div className="flex flex-wrap gap-2">
+                <button
+                    onClick={() => setCategory('')}
+                    className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                        !category ? 'bg-emerald-500 text-white' : 'border border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white'
+                    }`}
+                >
+                    All
+                </button>
+                {categories?.map((c) => (
+                    <button
+                        key={c.name}
+                        onClick={() => setCategory(c.name)}
+                        className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                            category === c.name ? 'bg-emerald-500 text-white' : 'border border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white'
+                        }`}
+                    >
+                        {c.name} ({c.count})
+                    </button>
+                ))}
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard
-                    title="F1-Score"
-                    value={metrics ? `${(metrics.f1_score * 100).toFixed(1)}%` : '—'}
-                    subtitle="Random Forest"
-                    icon={<Brain className="h-5 w-5 text-chart-1" />}
-                />
-                <KpiCard
-                    title="ROC-AUC"
-                    value={metrics ? `${(metrics.roc_auc * 100).toFixed(1)}%` : '—'}
-                    subtitle="Purchase Prediction"
-                    icon={<TrendingUp className="h-5 w-5 text-chart-2" />}
-                />
-                <KpiCard
-                    title="Total Products"
-                    value={modelInfo?.knn.total_products.toLocaleString() ?? '—'}
-                    subtitle={`Hit Rate: ${modelInfo ? (modelInfo.knn.hit_rate * 100).toFixed(1) : '0'}%`}
-                    icon={<Package className="h-5 w-5 text-chart-3" />}
-                />
-                <KpiCard
-                    title="Customer Segments"
-                    value={String(segments?.n_clusters ?? '—')}
-                    subtitle={`Silhouette: ${segments ? segments.silhouette_score.toFixed(3) : '—'}`}
-                    icon={<Users className="h-5 w-5 text-chart-4" />}
-                />
-            </div>
+            {/* Product Grid */}
+            {isLoading ? (
+                <div className="flex items-center justify-center py-20">
+                    <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+                </div>
+            ) : (
+                <>
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        {productData?.products.map((p) => <ProductCard key={p.id} product={p} />)}
+                    </div>
+                    {productData?.products.length === 0 && (
+                        <p className="py-20 text-center text-slate-500">No products found.</p>
+                    )}
+                </>
+            )}
 
-            {/* Charts row */}
-            <div className="grid gap-6 lg:grid-cols-2">
-                {/* Model Metrics Bar */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-base">
-                            <BarChart3 className="h-4 w-4" />
-                            Random Forest – Metrics
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {metrics && (
-                            <ResponsiveContainer width="100%" height={280}>
-                                <BarChart
-                                    data={[
-                                        {
-                                            name: 'Accuracy',
-                                            value: metrics.accuracy,
-                                        },
-                                        {
-                                            name: 'Precision',
-                                            value: metrics.precision,
-                                        },
-                                        {
-                                            name: 'Recall',
-                                            value: metrics.recall,
-                                        },
-                                        {
-                                            name: 'F1',
-                                            value: metrics.f1_score,
-                                        },
-                                        {
-                                            name: 'AUC',
-                                            value: metrics.roc_auc,
-                                        },
-                                    ]}
-                                    layout="vertical"
-                                    margin={{ left: 20 }}
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.15} />
-                                    <XAxis type="number" domain={[0, 1]} tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`} />
-                                    <YAxis dataKey="name" type="category" width={80} />
-                                    <Tooltip formatter={(v: number) => `${(v * 100).toFixed(1)}%`} />
-                                    <Bar dataKey="value" radius={[0, 6, 6, 0]}>
-                                        {['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'].map(
-                                            (color, i) => (
-                                                <Cell key={i} fill={color} />
-                                            ),
-                                        )}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        )}
-                    </CardContent>
-                </Card>
-
-                {/* Segment Pie */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-base">
-                            <Users className="h-4 w-4" />
-                            Customer Segments
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {segments && (
-                            <ResponsiveContainer width="100%" height={280}>
-                                <PieChart>
-                                    <Pie
-                                        data={segments.clusters.map((c, i) => ({
-                                            name: c.segment_name,
-                                            value: c.count,
-                                            fill: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
-                                        }))}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={100}
-                                        paddingAngle={3}
-                                        dataKey="value"
-                                        label={({ name, percent }) => `${name.replace(/[^\w\s/]/g, '').trim()} ${(percent * 100).toFixed(0)}%`}
-                                        labelLine={false}
-                                    >
-                                        {segments.clusters.map((_, i) => (
-                                            // eslint-disable-next-line @typescript-eslint/no-deprecated
-                                            <Cell key={i} fill={SEGMENT_COLORS[i % SEGMENT_COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip formatter={(value: number) => value.toLocaleString()} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        )}
-                        {segments && (
-                            <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                                {segments.clusters.map((c, i) => (
-                                    <div key={c.segment_id} className="flex items-center gap-2">
-                                        <span
-                                            className="h-3 w-3 rounded-full"
-                                            style={{
-                                                backgroundColor: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
-                                            }}
-                                        />
-                                        <span className="text-muted-foreground">{c.segment_name.replace(/[^\w\s/]/g, '').trim()}</span>
-                                        <span className="ml-auto font-medium">{c.count.toLocaleString()}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Model metadata */}
-            {modelInfo && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Model Metadata</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid gap-4 text-sm sm:grid-cols-3">
-                            <Meta label="Model" value={modelInfo.model_type} />
-                            <Meta label="Version" value={modelInfo.version} />
-                            <Meta label="Features" value={String(modelInfo.n_features)} />
-                            <Meta label="CV F1" value={`${(modelInfo.cv_f1_mean * 100).toFixed(1)}% ± ${(modelInfo.cv_f1_std * 100).toFixed(1)}%`} />
-                            <Meta label="KNN Hit Rate" value={`${(modelInfo.knn.hit_rate * 100).toFixed(1)}%`} />
-                            <Meta label="Silhouette" value={modelInfo.segmentation.silhouette_score.toFixed(3)} />
-                        </div>
-                    </CardContent>
-                </Card>
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-3">
+                    <button
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="rounded-lg border border-slate-700 p-2 transition-colors hover:border-slate-500 disabled:opacity-30"
+                    >
+                        <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <span className="text-sm text-slate-400">
+                        Page {page} of {totalPages}
+                    </span>
+                    <button
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                        className="rounded-lg border border-slate-700 p-2 transition-colors hover:border-slate-500 disabled:opacity-30"
+                    >
+                        <ChevronRight className="h-5 w-5" />
+                    </button>
+                </div>
             )}
         </div>
     );
 }
 
-function KpiCard({ title, value, subtitle, icon }: { title: string; value: string; subtitle: string; icon: React.ReactNode }) {
+function ProductCard({ product: p }: { product: ShopProduct }) {
     return (
-        <Card>
-            <CardContent className="flex items-start gap-4 pt-6">
-                <div className="rounded-lg bg-muted p-2.5">{icon}</div>
-                <div>
-                    <p className="text-sm text-muted-foreground">{title}</p>
-                    <p className="text-2xl font-bold">{value}</p>
-                    <p className="text-xs text-muted-foreground">{subtitle}</p>
+        <Link
+            to="/products/$productId"
+            params={{ productId: String(p.id) }}
+            className="group flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition-all hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10"
+        >
+            <div className="relative aspect-square overflow-hidden bg-slate-800">
+                <img
+                    src={p.image_url}
+                    alt={p.name}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    loading="lazy"
+                />
+                <span className="absolute left-2 top-2 rounded-md bg-slate-900/80 px-2 py-0.5 text-[10px] font-medium text-slate-300 backdrop-blur-sm">
+                    {p.category}
+                </span>
+            </div>
+            <div className="flex flex-1 flex-col p-3">
+                <h3 className="line-clamp-2 text-sm font-medium text-slate-200 group-hover:text-white">{p.name}</h3>
+                <div className="mt-auto flex items-center justify-between pt-2">
+                    <span className="text-base font-bold text-emerald-400">£{p.price.toFixed(2)}</span>
+                    <span className="text-[10px] text-slate-500">{p.purchase_count} sold</span>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </Link>
     );
 }
 
-function Meta({ label, value }: { label: string; value: string }) {
-    return (
-        <div>
-            <span className="text-muted-foreground">{label}: </span>
-            <span className="font-medium">{value}</span>
-        </div>
-    );
-}
+export const Route = createFileRoute('/')({
+    component: ShopHomePage,
+    validateSearch: (search: Record<string, unknown>): SearchParams => ({
+        search: typeof search.search === 'string' ? search.search : undefined,
+    }),
+});

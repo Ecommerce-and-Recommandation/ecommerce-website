@@ -9,24 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SegmentationRouteImport } from './routes/segmentation'
-import { Route as RecommendationRouteImport } from './routes/recommendation'
-import { Route as PredictionRouteImport } from './routes/prediction'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as CartRouteImport } from './routes/cart'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
+import { Route as AdminSegmentationRouteImport } from './routes/admin/segmentation'
+import { Route as AdminRecommendationRouteImport } from './routes/admin/recommendation'
+import { Route as AdminPredictionRouteImport } from './routes/admin/prediction'
 
-const SegmentationRoute = SegmentationRouteImport.update({
-  id: '/segmentation',
-  path: '/segmentation',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RecommendationRoute = RecommendationRouteImport.update({
-  id: '/recommendation',
-  path: '/recommendation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PredictionRoute = PredictionRouteImport.update({
-  id: '/prediction',
-  path: '/prediction',
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -34,62 +33,121 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
+  id: '/products/$productId',
+  path: '/products/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSegmentationRoute = AdminSegmentationRouteImport.update({
+  id: '/admin/segmentation',
+  path: '/admin/segmentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRecommendationRoute = AdminRecommendationRouteImport.update({
+  id: '/admin/recommendation',
+  path: '/admin/recommendation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPredictionRoute = AdminPredictionRouteImport.update({
+  id: '/admin/prediction',
+  path: '/admin/prediction',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/prediction': typeof PredictionRoute
-  '/recommendation': typeof RecommendationRoute
-  '/segmentation': typeof SegmentationRoute
+  '/cart': typeof CartRoute
+  '/login': typeof LoginRoute
+  '/admin/prediction': typeof AdminPredictionRoute
+  '/admin/recommendation': typeof AdminRecommendationRoute
+  '/admin/segmentation': typeof AdminSegmentationRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/prediction': typeof PredictionRoute
-  '/recommendation': typeof RecommendationRoute
-  '/segmentation': typeof SegmentationRoute
+  '/cart': typeof CartRoute
+  '/login': typeof LoginRoute
+  '/admin/prediction': typeof AdminPredictionRoute
+  '/admin/recommendation': typeof AdminRecommendationRoute
+  '/admin/segmentation': typeof AdminSegmentationRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/prediction': typeof PredictionRoute
-  '/recommendation': typeof RecommendationRoute
-  '/segmentation': typeof SegmentationRoute
+  '/cart': typeof CartRoute
+  '/login': typeof LoginRoute
+  '/admin/prediction': typeof AdminPredictionRoute
+  '/admin/recommendation': typeof AdminRecommendationRoute
+  '/admin/segmentation': typeof AdminSegmentationRoute
+  '/products/$productId': typeof ProductsProductIdRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/prediction' | '/recommendation' | '/segmentation'
+  fullPaths:
+    | '/'
+    | '/cart'
+    | '/login'
+    | '/admin/prediction'
+    | '/admin/recommendation'
+    | '/admin/segmentation'
+    | '/products/$productId'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/prediction' | '/recommendation' | '/segmentation'
-  id: '__root__' | '/' | '/prediction' | '/recommendation' | '/segmentation'
+  to:
+    | '/'
+    | '/cart'
+    | '/login'
+    | '/admin/prediction'
+    | '/admin/recommendation'
+    | '/admin/segmentation'
+    | '/products/$productId'
+    | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/cart'
+    | '/login'
+    | '/admin/prediction'
+    | '/admin/recommendation'
+    | '/admin/segmentation'
+    | '/products/$productId'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PredictionRoute: typeof PredictionRoute
-  RecommendationRoute: typeof RecommendationRoute
-  SegmentationRoute: typeof SegmentationRoute
+  CartRoute: typeof CartRoute
+  LoginRoute: typeof LoginRoute
+  AdminPredictionRoute: typeof AdminPredictionRoute
+  AdminRecommendationRoute: typeof AdminRecommendationRoute
+  AdminSegmentationRoute: typeof AdminSegmentationRoute
+  ProductsProductIdRoute: typeof ProductsProductIdRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/segmentation': {
-      id: '/segmentation'
-      path: '/segmentation'
-      fullPath: '/segmentation'
-      preLoaderRoute: typeof SegmentationRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/recommendation': {
-      id: '/recommendation'
-      path: '/recommendation'
-      fullPath: '/recommendation'
-      preLoaderRoute: typeof RecommendationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/prediction': {
-      id: '/prediction'
-      path: '/prediction'
-      fullPath: '/prediction'
-      preLoaderRoute: typeof PredictionRouteImport
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -99,14 +157,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/$productId': {
+      id: '/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof ProductsProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/segmentation': {
+      id: '/admin/segmentation'
+      path: '/admin/segmentation'
+      fullPath: '/admin/segmentation'
+      preLoaderRoute: typeof AdminSegmentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/recommendation': {
+      id: '/admin/recommendation'
+      path: '/admin/recommendation'
+      fullPath: '/admin/recommendation'
+      preLoaderRoute: typeof AdminRecommendationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/prediction': {
+      id: '/admin/prediction'
+      path: '/admin/prediction'
+      fullPath: '/admin/prediction'
+      preLoaderRoute: typeof AdminPredictionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PredictionRoute: PredictionRoute,
-  RecommendationRoute: RecommendationRoute,
-  SegmentationRoute: SegmentationRoute,
+  CartRoute: CartRoute,
+  LoginRoute: LoginRoute,
+  AdminPredictionRoute: AdminPredictionRoute,
+  AdminRecommendationRoute: AdminRecommendationRoute,
+  AdminSegmentationRoute: AdminSegmentationRoute,
+  ProductsProductIdRoute: ProductsProductIdRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

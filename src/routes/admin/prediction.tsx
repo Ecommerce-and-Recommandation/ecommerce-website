@@ -7,7 +7,7 @@ import { usePredictPurchase } from '@/lib/hooks';
 import type { CustomerFeatures } from '@/lib/api';
 import { Brain, Loader2, PartyPopper, ShieldAlert } from 'lucide-react';
 
-export const Route = createFileRoute('/prediction')({
+export const Route = createFileRoute('/admin/prediction')({
     component: PredictionPage,
 });
 
