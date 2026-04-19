@@ -1,112 +1,77 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { adminPromotionsApi, type PromoSuggestion } from '@/lib/api';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Sparkles, Plus, Trash2, Loader2, ArrowRight } from 'lucide-react';
-import { useState } from 'react';
+import { useAdminPromotions, useAdminPromoSuggestions, useCreatePromotion, useDeletePromotion } from '@/hooks/usePromotions';
+import { Sparkles, Trash2, Loader2, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PromoForm } from '@/components/promotions/promoForm';
+import type { PromoSuggestion, PromotionData } from '@/types/promotionTypes';
 
 function AdminPromotionsPage() {
-    const queryClient = useQueryClient();
+    const { data: promotions, isLoading: isLoadingPromos } = useAdminPromotions();
+    const { data: suggestions, isLoading: isLoadingSuggestions } = useAdminPromoSuggestions();
 
-    // Fetch lists
-    const { data: promotions, isLoading: isLoadingPromos } = useQuery({
-        queryKey: ['admin-promos'],
-        queryFn: () => adminPromotionsApi.getPromotions(),
-    });
+    const createMutation = useCreatePromotion();
+    const deleteMutation = useDeletePromotion();
 
-    const { data: suggestions, isLoading: isLoadingSuggestions } = useQuery({
-        queryKey: ['admin-promo-suggestions'],
-        queryFn: () => adminPromotionsApi.getSuggestions(),
-    });
+    const handleCreate = (data: { code: string; discount_type: string; discount_value: number; min_order_amount: number }) => {
+        createMutation.mutate(data);
+    };
 
-    // Mutations
-    const createMutation = useMutation({
-        mutationFn: adminPromotionsApi.createPromotion,
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: ['admin-promos'] });
-            setCode('');
-            setDiscountValue(10);
-        },
-    });
-
-    const deleteMutation = useMutation({
-        mutationFn: adminPromotionsApi.deletePromotion,
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: ['admin-promos'] });
-        },
-    });
-
-    // Form state
-    const [code, setCode] = useState('');
-    const [discountType, setDiscountType] = useState('PERCENTAGE');
-    const [discountValue, setDiscountValue] = useState<number>(10);
-    const [minOrder, setMinOrder] = useState<number>(0);
-
-    function handleCreate(e: React.SyntheticEvent) {
-        e.preventDefault();
-        createMutation.mutate({
-            code: code.toUpperCase(),
-            discount_type: discountType,
-            discount_value: discountValue,
-            min_order_amount: minOrder,
-        });
-    }
-
-    function handleAcceptSuggestion(sug: PromoSuggestion) {
+    const handleAcceptSuggestion = (sug: PromoSuggestion) => {
         createMutation.mutate({
             code: sug.suggested_promo.code,
             discount_type: sug.suggested_promo.discount_type,
             discount_value: sug.suggested_promo.discount_value,
             min_order_amount: 0,
         });
-    }
+    };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-in fade-in duration-500">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Promotions & Vouchers</h1>
-                <p className="mt-2 text-muted-foreground">Manage discount codes and AI-driven sales campaigns.</p>
+                <h1 className="text-3xl font-extrabold tracking-tight">Promotions & Vouchers</h1>
+                <p className="mt-2 text-muted-foreground font-medium">Manage discount codes and AI-driven sales campaigns.</p>
             </div>
 
             {/* AI Insights Widget */}
-            <Card className="border-none shadow-md bg-muted/30">
+            <Card className="border-none shadow-lg bg-gradient-to-br from-primary/5 to-primary/10">
                 <CardHeader>
                     <div className="flex items-center gap-2">
                         <Sparkles className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-xl">AI Sales Insights</CardTitle>
-                        <Badge variant="secondary">Beta</Badge>
+                        <CardTitle className="text-xl font-bold">AI Sales Insights</CardTitle>
+                        <Badge variant="secondary" className="bg-primary/20 text-primary font-bold">
+                            Smart Insights
+                        </Badge>
                     </div>
                 </CardHeader>
                 <CardContent>
                     {isLoadingSuggestions ? (
                         <div className="flex h-32 items-center justify-center">
-                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         </div>
                     ) : !suggestions || suggestions.length === 0 ? (
-                        <p className="text-sm text-muted-foreground pb-6">No current insights. Your conversion rates look healthy!</p>
+                        <p className="text-sm text-muted-foreground pb-6 font-medium text-center">
+                            No current insights. Your conversion rates look healthy!
+                        </p>
                     ) : (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {suggestions.map((s) => (
+                            {suggestions.map((s: PromoSuggestion) => (
                                 <div
                                     key={s.product_id}
-                                    className="flex flex-col justify-between rounded-xl border bg-card p-4 transition-all hover:border-primary/30"
+                                    className="flex flex-col justify-between rounded-xl border bg-card/50 backdrop-blur-sm p-4 transition-all hover:border-primary/50 hover:shadow-md"
                                 >
                                     <div className="flex gap-3">
-                                        <img src={s.image_url} alt="" className="h-14 w-14 rounded-lg object-cover" />
-                                        <div>
-                                            <h3 className="line-clamp-2 text-sm font-semibold">{s.product_name}</h3>
-                                            <p className="mt-1 text-xs text-muted-foreground">{s.reason}</p>
+                                        <img src={s.image_url} alt="" className="h-16 w-16 rounded-xl object-cover shadow-sm" />
+                                        <div className="min-w-0">
+                                            <h3 className="line-clamp-2 text-sm font-bold leading-tight">{s.product_name}</h3>
+                                            <p className="mt-1 text-xs text-muted-foreground font-medium line-clamp-2">{s.reason}</p>
                                         </div>
                                     </div>
-                                    <div className="mt-4 flex items-center justify-between rounded-lg bg-muted p-3">
-                                        <div>
-                                            <p className="text-[10px] uppercase font-bold text-muted-foreground">Suggested Code</p>
-                                            <p className="font-mono text-sm font-bold">{s.suggested_promo.code}</p>
+                                    <div className="mt-4 flex items-center justify-between rounded-xl bg-muted/50 p-3 border">
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] uppercase font-extrabold text-muted-foreground">Suggested Code</p>
+                                            <p className="font-mono text-sm font-extrabold text-primary truncate">{s.suggested_promo.code}</p>
                                         </div>
                                         <Button
                                             size="sm"
@@ -114,7 +79,7 @@ function AdminPromotionsPage() {
                                                 handleAcceptSuggestion(s);
                                             }}
                                             disabled={createMutation.isPending}
-                                            className="h-8 gap-1 text-xs"
+                                            className="h-8 gap-1 text-xs font-bold"
                                         >
                                             Create <ArrowRight className="h-3 w-3" />
                                         </Button>
@@ -126,48 +91,53 @@ function AdminPromotionsPage() {
                 </CardContent>
             </Card>
 
-            <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+            <div className="grid gap-8 lg:grid-cols-[1fr_350px]">
                 {/* Promotions Table */}
-                <Card className="shadow-sm">
-                    <CardHeader className="border-b bg-muted/40">
-                        <CardTitle className="text-base">Active Promotions</CardTitle>
+                <Card className="shadow-sm overflow-hidden">
+                    <CardHeader className="border-b bg-muted/40 px-6 py-4">
+                        <CardTitle className="text-base font-bold">Active Promotions</CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
                         {isLoadingPromos ? (
-                            <div className="p-8 text-center text-muted-foreground">Loading...</div>
+                            <div className="p-12 text-center">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                                <p className="mt-2 text-sm text-muted-foreground font-bold">Loading promotions...</p>
+                            </div>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
-                                    <thead className="border-b text-muted-foreground">
+                                    <thead className="border-b bg-muted/20 text-muted-foreground">
                                         <tr>
-                                            <th className="px-6 py-4 font-medium">Code</th>
-                                            <th className="px-6 py-4 font-medium">Discount</th>
-                                            <th className="px-6 py-4 font-medium">Min Order</th>
-                                            <th className="px-6 py-4 font-medium">Uses</th>
-                                            <th className="px-6 py-4 font-medium">Status</th>
-                                            <th className="px-6 py-4 text-right"></th>
+                                            <th className="px-6 py-3 font-bold uppercase text-[10px] tracking-wider">Code</th>
+                                            <th className="px-6 py-3 font-bold uppercase text-[10px] tracking-wider">Discount</th>
+                                            <th className="px-6 py-3 font-bold uppercase text-[10px] tracking-wider">Min Order</th>
+                                            <th className="px-6 py-3 font-bold uppercase text-[10px] tracking-wider">Usage</th>
+                                            <th className="px-6 py-3 font-bold uppercase text-[10px] tracking-wider">Status</th>
+                                            <th className="px-6 py-3 text-right"></th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y">
-                                        {promotions?.map((p) => (
-                                            <tr key={p.id} className="transition-colors hover:bg-muted/50 border-b last:border-0 font-medium">
-                                                <td className="px-6 py-4 font-mono font-bold">{p.code}</td>
+                                    <tbody className="divide-y relative">
+                                        {promotions?.map((p: PromotionData) => (
+                                            <tr key={p.id} className="transition-colors hover:bg-muted/30 font-medium">
                                                 <td className="px-6 py-4">
-                                                    {p.discount_type === 'PERCENTAGE'
-                                                        ? `${p.discount_value.toString()}%`
-                                                        : `£${p.discount_value.toString()}`}
+                                                    <span className="font-mono font-extrabold bg-muted px-2 py-1 rounded text-primary">{p.code}</span>
                                                 </td>
-                                                <td className="px-6 py-4">£{p.min_order_amount}</td>
-                                                <td className="px-6 py-4">
-                                                    {p.times_used.toString()} {p.usage_limit ? `/ ${p.usage_limit.toString()}` : ''}
+                                                <td className="px-6 py-4 font-bold">
+                                                    {p.discount_type === 'PERCENTAGE'
+                                                        ? `${String(p.discount_value)}%`
+                                                        : `£${String(p.discount_value)}`}
+                                                </td>
+                                                <td className="px-6 py-4 font-bold">£{p.min_order_amount.toFixed(2)}</td>
+                                                <td className="px-6 py-4 font-bold text-muted-foreground text-xs">
+                                                    {String(p.times_used)} {p.usage_limit ? `/ ${String(p.usage_limit)}` : ''}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {p.is_active ? (
-                                                        <Badge variant="default" className="text-[10px] font-bold">
+                                                        <Badge className="bg-emerald-500 hover:bg-emerald-600 text-[10px] font-extrabold">
                                                             ACTIVE
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant="destructive" className="text-[10px] font-bold">
+                                                        <Badge variant="destructive" className="text-[10px] font-extrabold">
                                                             INACTIVE
                                                         </Badge>
                                                     )}
@@ -179,18 +149,23 @@ function AdminPromotionsPage() {
                                                         onClick={() => {
                                                             deleteMutation.mutate(p.id);
                                                         }}
-                                                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                                         title="Delete"
+                                                        disabled={deleteMutation.isPending && deleteMutation.variables === p.id}
                                                     >
-                                                        <Trash2 className="h-4 w-4" />
+                                                        {deleteMutation.isPending && deleteMutation.variables === p.id ? (
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                            <Trash2 className="h-4 w-4" />
+                                                        )}
                                                     </Button>
                                                 </td>
                                             </tr>
                                         ))}
                                         {promotions?.length === 0 && (
                                             <tr>
-                                                <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                                                    No promotions found
+                                                <td colSpan={6} className="p-12 text-center text-muted-foreground font-bold">
+                                                    No active promotions found. Create one to get started!
                                                 </td>
                                             </tr>
                                         )}
@@ -202,70 +177,9 @@ function AdminPromotionsPage() {
                 </Card>
 
                 {/* Create Form */}
-                <Card className="shadow-sm self-start">
-                    <CardHeader>
-                        <CardTitle className="text-base">Create Custom Promo</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleCreate} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="promo-code">Code</Label>
-                                <Input
-                                    id="promo-code"
-                                    required
-                                    value={code}
-                                    onChange={(e) => {
-                                        setCode(e.target.value);
-                                    }}
-                                    placeholder="SUMMER20"
-                                    className="uppercase"
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-2">
-                                    <Label>Type</Label>
-                                    <Select value={discountType} onValueChange={setDiscountType}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="PERCENTAGE">% Off</SelectItem>
-                                            <SelectItem value="FIXED_AMOUNT">£ Off</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="promo-val">Value</Label>
-                                    <Input
-                                        id="promo-val"
-                                        required
-                                        type="number"
-                                        min="1"
-                                        value={discountValue}
-                                        onChange={(e) => {
-                                            setDiscountValue(Number(e.target.value));
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="promo-min">Min Order Amount (£)</Label>
-                                <Input
-                                    id="promo-min"
-                                    type="number"
-                                    min="0"
-                                    value={minOrder}
-                                    onChange={(e) => {
-                                        setMinOrder(Number(e.target.value));
-                                    }}
-                                />
-                            </div>
-                            <Button type="submit" className="w-full font-bold" disabled={createMutation.isPending || !code}>
-                                <Plus className="mr-2 h-4 w-4" /> Create Promotion
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
+                <div className="self-start">
+                    <PromoForm onCreate={handleCreate} isPending={createMutation.isPending} />
+                </div>
             </div>
         </div>
     );

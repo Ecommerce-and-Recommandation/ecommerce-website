@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useHealth, useModelInfo, useSegmentsOverview } from '@/lib/hooks';
+import { useHealth, useModelInfo, useSegmentsOverview } from '@/hooks/useMl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, Brain, Package, Users, Activity } from 'lucide-react';
 

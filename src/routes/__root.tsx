@@ -1,7 +1,7 @@
 import { Link, Outlet, createRootRoute, useNavigate, useRouterState } from '@tanstack/react-router';
 import { ShoppingBag, ShoppingCart, Search, BarChart3, Brain, Package, Users, LogOut, Settings, Ticket, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
-import { useCart } from '@/lib/hooks';
+import { useCart } from '@/hooks/useCart';
 import { useState } from 'react';
 import { tracker } from '@/lib/tracker';
 import { Button } from '@/components/ui/button';

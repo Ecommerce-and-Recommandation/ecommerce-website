@@ -1,23 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ordersApi } from '@/lib/api';
+import { useAdminOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { Loader2, PackageSearch, TrendingUp, DollarSign, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 function AdminOrdersPage() {
-    const qc = useQueryClient();
-
-    const { data: orders, isLoading } = useQuery({
-        queryKey: ['admin-orders'],
-        queryFn: () => ordersApi.getAdminOrders(),
-        refetchInterval: 15_000,
-    });
-
-    const updateStatus = useMutation({
-        mutationFn: ({ id, status }: { id: number; status: string }) => ordersApi.updateOrderStatus(id, status),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-orders'] }),
-    });
+    const { data: orders, isLoading } = useAdminOrders();
+    const updateStatus = useUpdateOrderStatus();
 
     if (isLoading) {
         return (
@@ -37,7 +27,7 @@ function AdminOrdersPage() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Manage Orders</h1>
+                <h1 className="text-3xl font-extrabold tracking-tight">Manage Orders</h1>
                 <p className="mt-2 text-muted-foreground">Monitor sales, approve pending transactions, and track revenue.</p>
             </div>
 
@@ -97,7 +87,7 @@ function AdminOrdersPage() {
                             <tbody className="divide-y">
                                 {orders.map((order) => (
                                     <tr key={order.id} className="hover:bg-muted/10 transition-colors">
-                                        <td className="px-6 py-4 font-semibold uppercase">
+                                        <td className="px-6 py-4 font-bold uppercase">
                                             #{order.id} (User {order.user_id})
                                         </td>
                                         <td className="px-6 py-4">
@@ -127,22 +117,15 @@ function AdminOrdersPage() {
                                                 }}
                                                 disabled={updateStatus.isPending && updateStatus.variables.id === order.id}
                                             >
-                                                <SelectTrigger className="w-[140px] h-8 text-xs font-semibold">
+                                                <SelectTrigger className="w-[140px] h-8 text-xs font-bold">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="PENDING" className="font-semibold">
-                                                        PENDING
-                                                    </SelectItem>
-                                                    <SelectItem value="COMPLETED" className="font-semibold">
-                                                        COMPLETED
-                                                    </SelectItem>
-                                                    <SelectItem value="DELIVERED" className="font-semibold">
-                                                        DELIVERED
-                                                    </SelectItem>
-                                                    <SelectItem value="CANCELED" className="font-semibold">
-                                                        CANCELED
-                                                    </SelectItem>
+                                                    {['PENDING', 'COMPLETED', 'DELIVERED', 'CANCELED'].map((s) => (
+                                                        <SelectItem key={s} value={s} className="font-bold">
+                                                            {s}
+                                                        </SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </td>

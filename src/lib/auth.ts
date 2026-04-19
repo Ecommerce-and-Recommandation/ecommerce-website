@@ -3,7 +3,8 @@
  * Uses `useSyncExternalStore` for React 18+ compatibility without external deps.
  */
 
-import { api } from './api';
+import { apiClient as api } from '@/services/apiClient';
+import { useSyncExternalStore } from 'react';
 
 interface AuthUser {
     id: number;
@@ -74,7 +75,9 @@ export const auth = {
 // ── Axios interceptor: attach JWT automatically ────────
 api.interceptors.request.use((cfg) => {
     const { token } = auth.getState();
-    if (token) cfg.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+        cfg.headers.Authorization = `Bearer ${token}`;
+    }
     return cfg;
 });
 
@@ -90,7 +93,6 @@ api.interceptors.response.use(
 );
 
 // ── React hook ─────────────────────────────────────────
-import { useSyncExternalStore } from 'react';
 
 export function useAuth() {
     const s = useSyncExternalStore(auth.subscribe, auth.getState);
