@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { tracker } from '@/lib/tracker';
 
 function RootLayout() {
-    const { isLoggedIn, user, logout } = useAuth();
+    const { isLoggedIn } = useAuth();
     const routerState = useRouterState();
     const pathname = routerState.location.pathname;
     const isLoginPage = pathname === '/login';
@@ -24,7 +24,7 @@ function LoginRedirect() {
     return null;
 }
 
-// ── Shop Layout ───────────────────────────────────────
+// ── Shop Layout (Light Theme) ─────────────────────────
 
 function ShopLayout() {
     const { user, logout } = useAuth();
@@ -41,9 +41,9 @@ function ShopLayout() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white">
+        <div className="min-h-screen bg-background text-foreground">
             {/* Header */}
-            <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-900/80 backdrop-blur-xl">
+            <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-xl">
                 <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
                     <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600">
@@ -54,13 +54,13 @@ function ShopLayout() {
 
                     <form onSubmit={handleSearch} className="flex flex-1 justify-center">
                         <div className="relative w-full max-w-lg">
-                            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search products..."
-                                className="w-full rounded-xl border border-slate-700 bg-slate-800/80 py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-400 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className="w-full rounded-xl border bg-muted/50 py-2.5 pl-10 pr-4 text-sm placeholder-muted-foreground transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                             />
                         </div>
                     </form>
@@ -68,11 +68,11 @@ function ShopLayout() {
                     <div className="flex items-center gap-3">
                         <Link
                             to="/cart"
-                            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 transition-colors hover:border-emerald-500 hover:bg-emerald-500/10"
+                            className="relative flex h-10 w-10 items-center justify-center rounded-xl border transition-colors hover:border-emerald-500 hover:bg-emerald-500/10"
                         >
                             <ShoppingCart className="h-5 w-5" />
                             {cart && cart.item_count > 0 && (
-                                <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold">
+                                <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white">
                                     {cart.item_count}
                                 </span>
                             )}
@@ -80,15 +80,15 @@ function ShopLayout() {
 
                         <Link
                             to="/admin"
-                            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 transition-colors hover:border-blue-500 hover:bg-blue-500/10"
+                            className="flex h-10 w-10 items-center justify-center rounded-xl border transition-colors hover:border-blue-500 hover:bg-blue-500/10"
                             title="Admin Panel"
                         >
                             <Settings className="h-5 w-5" />
                         </Link>
 
-                        <div className="flex items-center gap-2 rounded-xl border border-slate-700 px-3 py-2">
-                            <span className="text-sm text-slate-300">{user?.name}</span>
-                            <button onClick={logout} className="text-slate-400 transition-colors hover:text-red-400" title="Logout">
+                        <div className="flex items-center gap-2 rounded-xl border px-3 py-2">
+                            <span className="text-sm text-muted-foreground">{user?.name}</span>
+                            <button onClick={logout} className="text-muted-foreground transition-colors hover:text-red-500" title="Logout">
                                 <LogOut className="h-4 w-4" />
                             </button>
                         </div>

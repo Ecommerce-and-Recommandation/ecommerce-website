@@ -78,11 +78,15 @@ export function useCart() {
     });
 }
 
-export function useShopRecommendations() {
+export function useShopRecommendations(currentProductId?: number) {
+    const enabled = currentProductId !== -1;
+    const pid = currentProductId && currentProductId > 0 ? currentProductId : undefined;
     return useQuery({
-        queryKey: ['shopRecommendations'],
-        queryFn: shopApi.recommendations,
-        refetchInterval: 60_000,
+        queryKey: ['shopRecommendations', pid ?? null],
+        queryFn: () => shopApi.recommendations(pid),
+        enabled,
+        staleTime: 0, // always refetch on invalidation (behavior data changes frequently)
+        refetchInterval: 30_000, // auto-refresh every 30s
     });
 }
 
@@ -98,8 +102,7 @@ export function useBehaviorProfile() {
 export function useAddToCart() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ productId, quantity }: { productId: number; quantity?: number }) =>
-            shopApi.addToCart(productId, quantity),
+        mutationFn: ({ productId, quantity }: { productId: number; quantity?: number }) => shopApi.addToCart(productId, quantity),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['cart'] }),
     });
 }
@@ -107,8 +110,7 @@ export function useAddToCart() {
 export function useUpdateCartItem() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ itemId, quantity }: { itemId: number; quantity: number }) =>
-            shopApi.updateCartItem(itemId, quantity),
+        mutationFn: ({ itemId, quantity }: { itemId: number; quantity: number }) => shopApi.updateCartItem(itemId, quantity),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['cart'] }),
     });
 }

@@ -124,6 +124,7 @@ export interface CartItemData {
     product_price: number;
     product_image: string;
     stock_code: string;
+    added_at: string;
 }
 
 export interface CartResponse {
@@ -140,11 +141,18 @@ export interface ShopRecommendation {
     image_url: string;
     category: string;
     similarity: number;
+    source?: string;
+}
+
+export interface RecommendationSource {
+    stock_code: string;
+    weight: number;
+    from: string;
 }
 
 export interface BehaviorRecommendationsResponse {
-    source: 'knn' | 'popular';
-    source_product: string | null;
+    source: 'multi_knn' | 'popular';
+    source_products: RecommendationSource[];
     recommendations: ShopRecommendation[];
 }
 
@@ -158,8 +166,7 @@ export interface BehaviorProfileResponse {
 export const mlApi = {
     health: () => api.get<HealthResponse>('/health').then((r) => r.data),
 
-    predictPurchase: (features: CustomerFeatures) =>
-        api.post<PredictionResponse>('/predict/purchase', features).then((r) => r.data),
+    predictPurchase: (features: CustomerFeatures) => api.post<PredictionResponse>('/predict/purchase', features).then((r) => r.data),
 
     recommend: (stockCode: string, topK = 10) =>
         api
@@ -168,8 +175,7 @@ export const mlApi = {
             })
             .then((r) => r.data),
 
-    segmentCustomer: (features: CustomerFeatures) =>
-        api.post<SegmentInfo>('/segment/customer', features).then((r) => r.data),
+    segmentCustomer: (features: CustomerFeatures) => api.post<SegmentInfo>('/segment/customer', features).then((r) => r.data),
 
     segmentsOverview: () => api.get<SegmentOverviewResponse>('/segments/overview').then((r) => r.data),
 
@@ -188,15 +194,18 @@ export const shopApi = {
 
     cart: () => api.get<CartResponse>('/cart').then((r) => r.data),
 
-    addToCart: (product_id: number, quantity = 1) =>
-        api.post<CartItemData>('/cart', { product_id, quantity }).then((r) => r.data),
+    addToCart: (product_id: number, quantity = 1) => api.post<CartItemData>('/cart', { product_id, quantity }).then((r) => r.data),
 
-    updateCartItem: (itemId: number, quantity: number) =>
-        api.patch(`/cart/${itemId}`, { quantity }).then((r) => r.data),
+    updateCartItem: (itemId: number, quantity: number) => api.patch(`/cart/${itemId}`, { quantity }).then((r) => r.data),
 
     removeFromCart: (itemId: number) => api.delete(`/cart/${itemId}`).then((r) => r.data),
 
-    recommendations: () => api.get<BehaviorRecommendationsResponse>('/behavior/recommendations').then((r) => r.data),
+    recommendations: (currentProductId?: number) =>
+        api
+            .get<BehaviorRecommendationsResponse>('/behavior/recommendations', {
+                params: currentProductId ? { current_product_id: currentProductId } : {},
+            })
+            .then((r) => r.data),
 
     behaviorProfile: () => api.get<BehaviorProfileResponse>('/behavior/profile').then((r) => r.data),
 };

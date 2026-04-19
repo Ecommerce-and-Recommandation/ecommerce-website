@@ -1,10 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useProduct, useAddToCart } from '@/lib/hooks';
-import { useEffect, useRef } from 'react';
-import { Loader2, ShoppingCart, ArrowLeft, CheckCircle, Sparkles } from 'lucide-react';
+import { useProduct, useAddToCart, useShopRecommendations, useProducts } from '@/lib/hooks';
+import { useEffect, useRef, useState } from 'react';
+import { Loader2, ShoppingCart, ArrowLeft, CheckCircle, Sparkles, Tag } from 'lucide-react';
 import { tracker } from '@/lib/tracker';
-import { shopApi, type ShopRecommendation } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
+import type { ShopRecommendation } from '@/lib/api';
 
 function ProductDetailPage() {
     const { productId } = Route.useParams();
@@ -13,21 +12,38 @@ function ProductDetailPage() {
     const addToCart = useAddToCart();
     const viewStart = useRef(Date.now());
 
-    // Fetch recommendations based on this product's stock_code via KNN
-    const { data: recs } = useQuery({
-        queryKey: ['productRecs', product?.stock_code],
-        queryFn: () => shopApi.recommendations(),
-        enabled: !!product?.stock_code,
+    // Same-category products
+    const { data: categoryProducts } = useProducts({
+        category: product?.category,
+        page: 1,
+        page_size: 11, // fetch 11, we'll filter out self
     });
 
-    // Track view duration on unmount
+    // Lazy load AI recommendations
+    const [recsVisible, setRecsVisible] = useState(false);
+    const recsRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const el = recsRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) setRecsVisible(true);
+            },
+            { rootMargin: '200px' },
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    const { data: recs, isLoading: recsLoading } = useShopRecommendations(recsVisible ? id : undefined);
+
+    // Track view duration on unmount (tracker ignores <3s bounces)
     useEffect(() => {
         viewStart.current = Date.now();
         return () => {
             const duration = (Date.now() - viewStart.current) / 1000;
-            if (id && duration > 1) {
-                tracker.trackView(id, Math.round(duration));
-            }
+            tracker.trackView(id, duration);
         };
     }, [id]);
 
@@ -46,40 +62,38 @@ function ProductDetailPage() {
     }
 
     if (!product) {
-        return <p className="py-20 text-center text-slate-400">Product not found.</p>;
+        return <p className="py-20 text-center text-muted-foreground">Product not found.</p>;
     }
 
+    const sameCategoryItems = categoryProducts?.products.filter((p) => p.id !== id).slice(0, 10) ?? [];
+
     return (
-        <div className="space-y-10">
-            <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-slate-400 transition-colors hover:text-white">
+        <div className="space-y-12">
+            <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
                 <ArrowLeft className="h-4 w-4" /> Back to shop
             </Link>
 
             <div className="grid gap-8 md:grid-cols-2">
                 {/* Image */}
-                <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-                    <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="aspect-square w-full object-cover"
-                    />
+                <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                    <img src={product.image_url} alt={product.name} className="aspect-square w-full object-cover" />
                 </div>
 
                 {/* Info */}
                 <div className="flex flex-col justify-center space-y-6">
                     <div>
-                        <span className="inline-block rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-400">
+                        <span className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
                             {product.category}
                         </span>
-                        <h1 className="mt-3 text-3xl font-bold text-white">{product.name}</h1>
-                        <p className="mt-2 text-sm text-slate-400">SKU: {product.stock_code}</p>
+                        <h1 className="mt-3 text-3xl font-bold">{product.name}</h1>
+                        <p className="mt-2 text-sm text-muted-foreground">SKU: {product.stock_code}</p>
                     </div>
 
-                    <p className="leading-relaxed text-slate-300">{product.description}</p>
+                    <p className="leading-relaxed text-muted-foreground">{product.description}</p>
 
                     <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold text-emerald-400">£{product.price.toFixed(2)}</span>
-                        <span className="text-sm text-slate-500">{product.purchase_count} sold</span>
+                        <span className="text-4xl font-bold text-emerald-600">£{product.price.toFixed(2)}</span>
+                        <span className="text-sm text-muted-foreground">{product.purchase_count} sold</span>
                     </div>
 
                     <button
@@ -99,42 +113,93 @@ function ProductDetailPage() {
                 </div>
             </div>
 
-            {/* Similar Products */}
-            {recs && recs.recommendations.length > 0 && (
-                <section>
-                    <div className="mb-4 flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-amber-400" />
-                        <h2 className="text-xl font-bold text-white">You May Also Like</h2>
+            {/* Same Category */}
+            {sameCategoryItems.length > 0 && (
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Tag className="h-5 w-5 text-blue-500" />
+                        <h2 className="text-xl font-bold">More in {product.category}</h2>
                     </div>
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                        {recs.recommendations
-                            .filter((r: ShopRecommendation) => r.id !== id && r.id > 0)
-                            .slice(0, 5)
-                            .map((r: ShopRecommendation) => (
-                                <Link
-                                    key={r.stock_code}
-                                    to="/products/$productId"
-                                    params={{ productId: String(r.id) }}
-                                    onClick={() => tracker.trackClickRecommendation(r.id, 'detail_page')}
-                                    className="group flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition-all hover:border-emerald-500/50"
-                                >
-                                    <div className="aspect-square overflow-hidden bg-slate-800">
-                                        <img
-                                            src={r.image_url}
-                                            alt={r.name}
-                                            className="h-full w-full object-cover transition-transform group-hover:scale-110"
-                                            loading="lazy"
-                                        />
+                        {sameCategoryItems.map((p) => (
+                            <Link
+                                key={p.id}
+                                to="/products/$productId"
+                                params={{ productId: String(p.id) }}
+                                className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:border-emerald-500/50 hover:shadow-md"
+                            >
+                                <div className="relative aspect-square overflow-hidden bg-muted">
+                                    <img
+                                        src={p.image_url}
+                                        alt={p.name}
+                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                        loading="lazy"
+                                    />
+                                </div>
+                                <div className="flex flex-1 flex-col p-3">
+                                    <h3 className="line-clamp-2 text-sm font-medium group-hover:text-emerald-600">{p.name}</h3>
+                                    <div className="mt-auto flex items-center justify-between pt-2">
+                                        <span className="text-base font-bold text-emerald-600">£{p.price.toFixed(2)}</span>
+                                        <span className="text-[10px] text-muted-foreground">{p.purchase_count} sold</span>
                                     </div>
-                                    <div className="p-3">
-                                        <p className="line-clamp-2 text-xs font-medium text-slate-300">{r.name}</p>
-                                        <p className="mt-1 text-sm font-bold text-emerald-400">£{r.price.toFixed(2)}</p>
-                                    </div>
-                                </Link>
-                            ))}
+                                </div>
+                            </Link>
+                        ))}
                     </div>
                 </section>
             )}
+
+            {/* AI Recommendations (lazy loaded) */}
+            <div ref={recsRef}>
+                {recsVisible && recs && recs.recommendations.length > 0 && (
+                    <section className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-5 w-5 text-amber-500" />
+                            <h2 className="text-xl font-bold">You May Also Like</h2>
+                            {recs.source === 'multi_knn' && (
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">AI Powered</span>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                            {recs.recommendations
+                                .filter((r: ShopRecommendation) => r.id !== id && r.id > 0)
+                                .map((r: ShopRecommendation) => (
+                                    <Link
+                                        key={r.stock_code}
+                                        to="/products/$productId"
+                                        params={{ productId: String(r.id) }}
+                                        onClick={() => tracker.trackClickRecommendation(r.id, 'detail_page')}
+                                        className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:border-emerald-500/50 hover:shadow-md"
+                                    >
+                                        <div className="relative aspect-square overflow-hidden bg-muted">
+                                            <img
+                                                src={r.image_url}
+                                                alt={r.name}
+                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                                loading="lazy"
+                                            />
+                                            <span className="absolute left-2 top-2 rounded-md bg-background/80 px-2 py-0.5 text-[10px] font-medium text-muted-foreground backdrop-blur-sm">
+                                                {r.category}
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-1 flex-col p-3">
+                                            <h3 className="line-clamp-2 text-sm font-medium group-hover:text-emerald-600">{r.name}</h3>
+                                            <div className="mt-auto flex items-center justify-between pt-2">
+                                                <span className="text-base font-bold text-emerald-600">£{r.price.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                        </div>
+                    </section>
+                )}
+                {recsVisible && recsLoading && (
+                    <div className="flex items-center justify-center py-10">
+                        <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
+                        <span className="ml-2 text-sm text-muted-foreground">Loading recommendations...</span>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
