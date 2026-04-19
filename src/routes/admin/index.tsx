@@ -19,7 +19,7 @@ function AdminDashboard() {
             <div className="grid gap-4 md:grid-cols-4">
                 <Card>
                     <CardContent className="flex items-center gap-3 pt-6">
-                        <Activity className="h-8 w-8 text-emerald-500" />
+                        <Activity className="h-8 w-8 text-primary" />
                         <div>
                             <p className="text-sm text-muted-foreground">API Status</p>
                             <p className="text-lg font-bold">{health?.models_loaded ? 'Online' : 'Offline'}</p>
@@ -28,7 +28,7 @@ function AdminDashboard() {
                 </Card>
                 <Card>
                     <CardContent className="flex items-center gap-3 pt-6">
-                        <Brain className="h-8 w-8 text-blue-500" />
+                        <Brain className="h-8 w-8 text-primary/80" />
                         <div>
                             <p className="text-sm text-muted-foreground">Models Loaded</p>
                             <p className="text-lg font-bold">{health?.models.length ?? 0}</p>
@@ -37,7 +37,7 @@ function AdminDashboard() {
                 </Card>
                 <Card>
                     <CardContent className="flex items-center gap-3 pt-6">
-                        <Package className="h-8 w-8 text-amber-500" />
+                        <Package className="h-8 w-8 text-primary/60" />
                         <div>
                             <p className="text-sm text-muted-foreground">Total Products</p>
                             <p className="text-lg font-bold">{modelInfo?.knn.total_products ?? '—'}</p>
@@ -46,7 +46,7 @@ function AdminDashboard() {
                 </Card>
                 <Card>
                     <CardContent className="flex items-center gap-3 pt-6">
-                        <Users className="h-8 w-8 text-violet-500" />
+                        <Users className="h-8 w-8 text-primary/40" />
                         <div>
                             <p className="text-sm text-muted-foreground">Customer Segments</p>
                             <p className="text-lg font-bold">{segments?.n_clusters ?? '—'}</p>

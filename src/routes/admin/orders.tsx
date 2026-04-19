@@ -45,16 +45,16 @@ function AdminOrdersPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                        <DollarSign className="h-4 w-4 text-emerald-500" />
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-emerald-600">£{totalRevenue.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">£{totalRevenue.toFixed(2)}</div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                        <Package className="h-4 w-4 text-blue-500" />
+                        <Package className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{totalOrders}</div>
@@ -63,10 +63,10 @@ function AdminOrdersPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
-                        <TrendingUp className="h-4 w-4 border rounded-full p-0.5 border-amber-500 text-amber-500" />
+                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-amber-600">{pendingOrders}</div>
+                        <div className="text-2xl font-bold">{pendingOrders}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -106,12 +106,12 @@ function AdminOrdersPage() {
                                                 {order.items.map((i) => i.product_name).join(', ')}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 font-bold text-emerald-600">£{order.total_amount.toFixed(2)}</td>
+                                        <td className="px-6 py-4 font-bold">£{order.total_amount.toFixed(2)}</td>
                                         <td className="px-6 py-4">
                                             {order.discount_amount > 0 ? (
-                                                <span className="text-emerald-500 text-xs bg-emerald-500/10 px-2 py-1 rounded">
+                                                <Badge variant="secondary" className="font-bold">
                                                     -£{order.discount_amount.toFixed(2)}
-                                                </span>
+                                                </Badge>
                                             ) : (
                                                 <span className="text-muted-foreground opacity-50">-</span>
                                             )}
@@ -131,16 +131,16 @@ function AdminOrdersPage() {
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="PENDING" className="font-semibold text-amber-600 focus:text-amber-600">
+                                                    <SelectItem value="PENDING" className="font-semibold">
                                                         PENDING
                                                     </SelectItem>
-                                                    <SelectItem value="COMPLETED" className="font-semibold text-emerald-600 focus:text-emerald-600">
+                                                    <SelectItem value="COMPLETED" className="font-semibold">
                                                         COMPLETED
                                                     </SelectItem>
-                                                    <SelectItem value="DELIVERED" className="font-semibold text-blue-600 focus:text-blue-600">
+                                                    <SelectItem value="DELIVERED" className="font-semibold">
                                                         DELIVERED
                                                     </SelectItem>
-                                                    <SelectItem value="CANCELED" className="font-semibold text-red-600 focus:text-red-600">
+                                                    <SelectItem value="CANCELED" className="font-semibold">
                                                         CANCELED
                                                     </SelectItem>
                                                 </SelectContent>
