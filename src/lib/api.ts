@@ -196,7 +196,8 @@ export const shopApi = {
 
     addToCart: (product_id: number, quantity = 1) => api.post<CartItemData>('/cart', { product_id, quantity }).then((r) => r.data),
 
-    updateCartItem: (itemId: number, quantity: number) => api.patch<{ message: string }>(`/cart/${itemId.toString()}`, { quantity }).then((r): { message: string } => r.data),
+    updateCartItem: (itemId: number, quantity: number) =>
+        api.patch<{ message: string }>(`/cart/${itemId.toString()}`, { quantity }).then((r): { message: string } => r.data),
 
     removeFromCart: (itemId: number) => api.delete<{ message: string }>(`/cart/${itemId.toString()}`).then((r): { message: string } => r.data),
 
@@ -291,5 +292,6 @@ export interface OrderData {
 export const ordersApi = {
     getMyOrders: () => api.get<OrderData[]>('/orders/me').then((r) => r.data),
     getAdminOrders: () => api.get<OrderData[]>('/admin/orders').then((r) => r.data),
-    updateOrderStatus: (id: number, status: string) => api.put<{ message: string }>(`/admin/orders/${id.toString()}/status`, { status }).then((r): { message: string } => r.data),
+    updateOrderStatus: (id: number, status: string) =>
+        api.put<{ message: string }>(`/admin/orders/${id.toString()}/status`, { status }).then((r): { message: string } => r.data),
 };

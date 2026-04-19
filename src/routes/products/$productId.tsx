@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Loader2, ShoppingCart, ArrowLeft, CheckCircle, Sparkles, Tag, Plus, Minus } from 'lucide-react';
 import { tracker } from '@/lib/tracker';
 import type { ShopRecommendation } from '@/lib/api';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function ProductDetailPage() {
     const { productId } = Route.useParams();
@@ -67,8 +71,19 @@ function ProductDetailPage() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center py-32">
-                <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+            <div className="space-y-12">
+                <Skeleton className="h-5 w-24" />
+                <div className="grid gap-8 md:grid-cols-2">
+                    <Skeleton className="aspect-square w-full rounded-2xl" />
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <Skeleton className="h-6 w-24 rounded-full" />
+                            <Skeleton className="h-10 w-2/3" />
+                        </div>
+                        <Skeleton className="h-32 w-full" />
+                        <Skeleton className="h-10 w-32" />
+                    </div>
+                </div>
             </div>
         );
     }
@@ -81,72 +96,77 @@ function ProductDetailPage() {
 
     return (
         <div className="space-y-12">
-            <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
-                <ArrowLeft className="h-4 w-4" /> Back to shop
-            </Link>
+            <Button variant="ghost" size="sm" asChild className="-ml-2 text-muted-foreground">
+                <Link to="/">
+                    <ArrowLeft className="h-4 w-4 mr-1" /> Back to shop
+                </Link>
+            </Button>
 
             <div className="grid gap-8 md:grid-cols-2">
                 {/* Image */}
-                <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                <Card className="overflow-hidden rounded-2xl border-none shadow-md">
                     <img src={product.image_url} alt={product.name} className="aspect-square w-full object-cover" />
-                </div>
+                </Card>
 
                 {/* Info */}
                 <div className="flex flex-col justify-center space-y-6">
                     <div>
-                        <span className="inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+                        <Badge variant="secondary" className="mb-3">
                             {product.category}
-                        </span>
-                        <h1 className="mt-3 text-3xl font-bold">{product.name}</h1>
-                        <p className="mt-2 text-sm text-muted-foreground">SKU: {product.stock_code}</p>
+                        </Badge>
+                        <h1 className="text-3xl font-bold">{product.name}</h1>
+                        <p className="mt-2 text-sm text-muted-foreground font-mono">CODE: {product.stock_code}</p>
                     </div>
 
                     <p className="leading-relaxed text-muted-foreground">{product.description}</p>
 
                     <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold text-emerald-600">£{product.price.toFixed(2)}</span>
+                        <span className="text-4xl font-bold text-primary">£{product.price.toFixed(2)}</span>
                         <span className="text-sm text-muted-foreground">{product.purchase_count} sold</span>
                     </div>
 
-                    <div className="flex items-center gap-4 pt-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
                         {/* Quantity Selector */}
-                        <div className="flex items-center gap-3 rounded-xl border bg-background px-3 py-2">
-                            <button
+                        <div className="flex items-center gap-3 rounded-xl border bg-card px-3 py-1.5 h-14">
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => {
                                     setQuantity((q) => Math.max(1, q - 1));
                                 }}
                                 disabled={quantity <= 1 || addToCart.isPending}
-                                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-50"
                             >
                                 <Minus className="h-4 w-4" />
-                            </button>
-                            <span className="w-8 text-center text-lg font-medium">{quantity}</span>
-                            <button
+                            </Button>
+                            <span className="w-8 text-center text-lg font-bold">{quantity}</span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => {
                                     setQuantity((q) => q + 1);
                                 }}
                                 disabled={addToCart.isPending}
-                                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-50"
                             >
                                 <Plus className="h-4 w-4" />
-                            </button>
+                            </Button>
                         </div>
 
                         {/* Add to Cart Button */}
-                        <button
+                        <Button
+                            size="lg"
+                            className="flex-1 h-14 text-lg font-bold shadow-xl shadow-primary/10"
                             onClick={handleAddToCart}
                             disabled={addToCart.isPending || justAdded}
-                            className="flex-1 flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-4 text-lg font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 disabled:opacity-70"
                         >
                             {addToCart.isPending ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
+                                <Loader2 className="h-5 w-5 animate-spin mr-2" />
                             ) : justAdded ? (
-                                <CheckCircle className="h-5 w-5" />
+                                <CheckCircle className="h-5 w-5 mr-2" />
                             ) : (
-                                <ShoppingCart className="h-5 w-5" />
+                                <ShoppingCart className="h-5 w-5 mr-2" />
                             )}
                             {justAdded ? 'Added to Cart!' : 'Add to Cart'}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -160,27 +180,24 @@ function ProductDetailPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                         {sameCategoryItems.map((p) => (
-                            <Link
-                                key={p.id}
-                                to="/products/$productId"
-                                params={{ productId: String(p.id) }}
-                                className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:border-emerald-500/50 hover:shadow-md"
-                            >
-                                <div className="relative aspect-square overflow-hidden bg-muted">
-                                    <img
-                                        src={p.image_url}
-                                        alt={p.name}
-                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                        loading="lazy"
-                                    />
-                                </div>
-                                <div className="flex flex-1 flex-col p-3">
-                                    <h3 className="line-clamp-2 text-sm font-medium group-hover:text-emerald-600">{p.name}</h3>
-                                    <div className="mt-auto flex items-center justify-between pt-2">
-                                        <span className="text-base font-bold text-emerald-600">£{p.price.toFixed(2)}</span>
-                                        <span className="text-[10px] text-muted-foreground">{p.purchase_count} sold</span>
+                            <Link key={p.id} to="/products/$productId" params={{ productId: String(p.id) }} className="group block">
+                                <Card className="h-full overflow-hidden transition-all hover:border-primary/50 hover:shadow-md">
+                                    <div className="relative aspect-square overflow-hidden bg-muted">
+                                        <img
+                                            src={p.image_url}
+                                            alt={p.name}
+                                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                            loading="lazy"
+                                        />
                                     </div>
-                                </div>
+                                    <div className="flex flex-col p-3">
+                                        <h3 className="line-clamp-2 text-sm font-medium group-hover:text-primary">{p.name}</h3>
+                                        <div className="mt-4 flex items-center justify-between">
+                                            <span className="text-base font-bold">£{p.price.toFixed(2)}</span>
+                                            <span className="text-[10px] text-muted-foreground">{p.purchase_count} sold</span>
+                                        </div>
+                                    </div>
+                                </Card>
                             </Link>
                         ))}
                     </div>
@@ -195,7 +212,9 @@ function ProductDetailPage() {
                             <Sparkles className="h-5 w-5 text-amber-500" />
                             <h2 className="text-xl font-bold">You May Also Like</h2>
                             {recs.source === 'multi_knn' && (
-                                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">AI Powered</span>
+                                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-700">
+                                    AI Powered
+                                </Badge>
                             )}
                         </div>
                         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -209,34 +228,46 @@ function ProductDetailPage() {
                                         onClick={() => {
                                             tracker.trackClickRecommendation(r.id, 'detail_page');
                                         }}
-                                        className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:border-emerald-500/50 hover:shadow-md"
+                                        className="group block"
                                     >
-                                        <div className="relative aspect-square overflow-hidden bg-muted">
-                                            <img
-                                                src={r.image_url}
-                                                alt={r.name}
-                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                                loading="lazy"
-                                            />
-                                            <span className="absolute left-2 top-2 rounded-md bg-background/80 px-2 py-0.5 text-[10px] font-medium text-muted-foreground backdrop-blur-sm">
-                                                {r.category}
-                                            </span>
-                                        </div>
-                                        <div className="flex flex-1 flex-col p-3">
-                                            <h3 className="line-clamp-2 text-sm font-medium group-hover:text-emerald-600">{r.name}</h3>
-                                            <div className="mt-auto flex items-center justify-between pt-2">
-                                                <span className="text-base font-bold text-emerald-600">£{r.price.toFixed(2)}</span>
+                                        <Card className="h-full overflow-hidden transition-all hover:border-primary/50 hover:shadow-md">
+                                            <div className="relative aspect-square overflow-hidden bg-muted">
+                                                <img
+                                                    src={r.image_url}
+                                                    alt={r.name}
+                                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                                    loading="lazy"
+                                                />
+                                                <Badge
+                                                    variant="secondary"
+                                                    className="absolute left-2 top-2 bg-background/80 backdrop-blur-sm text-[10px] font-medium"
+                                                >
+                                                    {r.category}
+                                                </Badge>
                                             </div>
-                                        </div>
+                                            <div className="flex flex-col p-3">
+                                                <h3 className="line-clamp-2 text-sm font-medium group-hover:text-primary">{r.name}</h3>
+                                                <div className="mt-4 flex items-center justify-between">
+                                                    <span className="text-base font-bold">£{r.price.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        </Card>
                                     </Link>
                                 ))}
                         </div>
                     </section>
                 )}
                 {recsVisible && recsLoading && (
-                    <div className="flex items-center justify-center py-10">
-                        <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
-                        <span className="ml-2 text-sm text-muted-foreground">Loading recommendations...</span>
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                            <div key={i} className="space-y-3">
+                                <Skeleton className="aspect-square w-full rounded-xl" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-2/3" />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>

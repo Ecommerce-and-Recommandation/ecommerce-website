@@ -4,6 +4,10 @@ import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/hooks';
 import { useState } from 'react';
 import { tracker } from '@/lib/tracker';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 function RootLayout() {
     const { isLoggedIn, user } = useAuth();
@@ -20,11 +24,11 @@ function RootLayout() {
         if (user && !user.is_admin) {
             return (
                 <div className="p-10 flex flex-col items-center">
-                    <h1 className="text-2xl font-bold text-red-500">Access Denied</h1>
+                    <h1 className="text-2xl font-bold text-destructive">Access Denied</h1>
                     <p>You do not have administrator permissions.</p>
-                    <Link to="/" className="text-emerald-500 mt-4 underline">
-                        Go home
-                    </Link>
+                    <Button variant="link" asChild className="mt-4">
+                        <Link to="/">Go home</Link>
+                    </Button>
                 </div>
             );
         }
@@ -62,8 +66,8 @@ function ShopLayout() {
             <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-xl">
                 <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
                     <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600">
-                            <ShoppingBag className="h-5 w-5 text-white" />
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                            <ShoppingBag className="h-5 w-5" />
                         </div>
                         <span className="text-lg font-bold tracking-tight">ML Shop</span>
                     </Link>
@@ -71,58 +75,58 @@ function ShopLayout() {
                     <form onSubmit={handleSearch} className="flex flex-1 justify-center">
                         <div className="relative w-full max-w-lg">
                             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <input
+                            <Input
                                 type="text"
                                 value={search}
                                 onChange={(e) => {
                                     setSearch(e.target.value);
                                 }}
                                 placeholder="Search products..."
-                                className="w-full rounded-xl border bg-muted/50 py-2.5 pl-10 pr-4 text-sm placeholder-muted-foreground transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                className="pl-10 h-10 border-none bg-muted/50 rounded-xl focus-visible:ring-1 focus-visible:ring-primary/20"
                             />
                         </div>
                     </form>
 
-                    <div className="flex items-center gap-3">
-                        <Link
-                            to="/orders"
-                            className="relative flex h-10 w-10 items-center justify-center rounded-xl border transition-colors hover:border-emerald-500 hover:bg-emerald-500/10"
-                            title="My Orders"
-                        >
-                            <Package className="h-5 w-5" />
-                        </Link>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" asChild className="rounded-xl h-10 w-10">
+                            <Link to="/orders" title="My Orders">
+                                <Package className="h-5 w-5" />
+                            </Link>
+                        </Button>
 
-                        <Link
-                            to="/cart"
-                            className="relative flex h-10 w-10 items-center justify-center rounded-xl border transition-colors hover:border-emerald-500 hover:bg-emerald-500/10"
-                        >
-                            <ShoppingCart className="h-5 w-5" />
+                        <div className="relative">
+                            <Button variant="outline" size="icon" asChild className="rounded-xl h-10 w-10">
+                                <Link to="/cart">
+                                    <ShoppingCart className="h-5 w-5" />
+                                </Link>
+                            </Button>
                             {cart && cart.item_count > 0 && (
-                                <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white">
+                                <Badge className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold">
                                     {cart.item_count}
-                                </span>
+                                </Badge>
                             )}
-                        </Link>
+                        </div>
 
-                        <Link
-                            to="/admin"
-                            className="flex h-10 w-10 items-center justify-center rounded-xl border transition-colors hover:border-blue-500 hover:bg-blue-500/10"
-                            title="Admin Panel"
-                        >
-                            <Settings className="h-5 w-5" />
-                        </Link>
+                        <Button variant="outline" size="icon" asChild className="rounded-xl h-10 w-10">
+                            <Link to="/admin" title="Admin Panel">
+                                <Settings className="h-5 w-5" />
+                            </Link>
+                        </Button>
 
-                        <div className="flex items-center gap-2 rounded-xl border px-3 py-2">
-                            <span className="text-sm text-muted-foreground">{user?.name}</span>
-                            <button
+                        <div className="flex items-center h-10 gap-2 rounded-xl border px-3">
+                            <span className="text-xs font-medium text-muted-foreground">{user?.name}</span>
+                            <Separator orientation="vertical" className="h-4 mx-1" />
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-muted-foreground hover:text-destructive"
                                 onClick={() => {
                                     logout();
                                 }}
-                                className="text-muted-foreground transition-colors hover:text-red-500"
                                 title="Logout"
                             >
-                                <LogOut className="h-4 w-4" />
-                            </button>
+                                <LogOut className="h-3.5 w-3.5" />
+                            </Button>
                         </div>
                     </div>
                 </div>

@@ -1,9 +1,13 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router';
 import { useProducts, useCategories, useShopRecommendations } from '@/lib/hooks';
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, Sparkles, ShoppingBag } from 'lucide-react';
 import { tracker } from '@/lib/tracker';
 import type { ShopProduct, ShopRecommendation } from '@/lib/api';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SearchParams {
     search?: string;
@@ -56,41 +60,44 @@ function ShopHomePage() {
 
     return (
         <div className="space-y-10">
-            {/* Category Filters */}
             <div className="flex flex-wrap gap-2">
-                <button
+                <Badge
+                    variant={!category ? 'default' : 'outline'}
+                    className="cursor-pointer px-4 py-1.5 text-xs font-semibold"
                     onClick={() => {
                         setCategory('');
                         setPage(1);
                     }}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                        !category ? 'bg-emerald-500 text-white' : 'border text-muted-foreground hover:border-emerald-500 hover:text-foreground'
-                    }`}
                 >
                     All
-                </button>
+                </Badge>
                 {categories?.map((c) => (
-                    <button
+                    <Badge
                         key={c.name}
+                        variant={category === c.name ? 'default' : 'outline'}
+                        className="cursor-pointer px-4 py-1.5 text-xs font-semibold"
                         onClick={() => {
                             setCategory(c.name);
                             setPage(1);
                         }}
-                        className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                            category === c.name
-                                ? 'bg-emerald-500 text-white'
-                                : 'border text-muted-foreground hover:border-emerald-500 hover:text-foreground'
-                        }`}
                     >
                         {c.name} ({c.count})
-                    </button>
+                    </Badge>
                 ))}
             </div>
 
             {/* Product Grid */}
             {isLoading ? (
-                <div className="flex items-center justify-center py-20">
-                    <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                        <div key={i} className="space-y-3">
+                            <Skeleton className="aspect-square w-full rounded-xl" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-full" />
+                                <Skeleton className="h-4 w-2/3" />
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : (
                 <>
@@ -99,34 +106,41 @@ function ShopHomePage() {
                             <ProductCard key={p.id} product={p} />
                         ))}
                     </div>
-                    {productData?.products.length === 0 && <p className="py-20 text-center text-muted-foreground">No products found.</p>}
+                    {productData?.products.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-24 text-center">
+                            <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                            <p className="text-muted-foreground">No products found for this criteria.</p>
+                        </div>
+                    )}
                 </>
             )}
 
             {/* Pagination */}
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-3">
-                    <button
+                    <Button
+                        variant="outline"
+                        size="icon"
                         onClick={() => {
                             setPage((p) => Math.max(1, p - 1));
                         }}
                         disabled={page === 1}
-                        className="rounded-lg border p-2 transition-colors hover:border-emerald-500 disabled:opacity-30"
                     >
-                        <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <span className="text-sm text-muted-foreground">
+                        <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm font-medium">
                         Page {page} of {totalPages}
                     </span>
-                    <button
+                    <Button
+                        variant="outline"
+                        size="icon"
                         onClick={() => {
                             setPage((p) => Math.min(totalPages, p + 1));
                         }}
                         disabled={page === totalPages}
-                        className="rounded-lg border p-2 transition-colors hover:border-emerald-500 disabled:opacity-30"
                     >
-                        <ChevronRight className="h-5 w-5" />
-                    </button>
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
                 </div>
             )}
 
@@ -138,7 +152,12 @@ function ShopHomePage() {
                             <Sparkles className="h-5 w-5 text-amber-500" />
                             <h2 className="text-xl font-bold">{recs.source === 'multi_knn' ? 'Recommended for You' : 'Popular Products'}</h2>
                             {recs.source === 'multi_knn' && (
-                                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">AI Powered</span>
+                                <Badge
+                                    variant="secondary"
+                                    className="bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/10 hover:text-emerald-700"
+                                >
+                                    AI Powered
+                                </Badge>
                             )}
                         </div>
                         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -163,29 +182,29 @@ function ShopHomePage() {
 
 function ProductCard({ product: p }: { product: ShopProduct }) {
     return (
-        <Link
-            to="/products/$productId"
-            params={{ productId: String(p.id) }}
-            className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:border-emerald-500/50 hover:shadow-md"
-        >
-            <div className="relative aspect-square overflow-hidden bg-muted">
-                <img
-                    src={p.image_url}
-                    alt={p.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    loading="lazy"
-                />
-            </div>
-            <div className="flex flex-1 flex-col p-3">
-                <h3 className="line-clamp-2 text-sm font-medium group-hover:text-emerald-600">{p.name}</h3>
-                <span className="mt-1.5 w-fit rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-medium text-secondary-foreground transition-colors group-hover:bg-emerald-100 group-hover:text-emerald-700">
-                    {p.category}
-                </span>
-                <div className="mt-auto flex items-center justify-between pt-2">
-                    <span className="text-base font-bold text-emerald-600">£{p.price.toFixed(2)}</span>
-                    <span className="text-[10px] text-muted-foreground">{p.purchase_count} sold</span>
+        <Link to="/products/$productId" params={{ productId: String(p.id) }} className="group block">
+            <Card className="h-full overflow-hidden transition-all hover:border-primary/50 hover:shadow-md">
+                <div className="relative aspect-square overflow-hidden bg-muted">
+                    <img
+                        src={p.image_url}
+                        alt={p.name}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        loading="lazy"
+                    />
                 </div>
-            </div>
+                <div className="flex flex-col p-3">
+                    <h3 className="line-clamp-2 text-sm font-medium group-hover:text-primary">{p.name}</h3>
+                    <div className="mt-1.5">
+                        <Badge variant="secondary" className="text-[10px] font-medium">
+                            {p.category}
+                        </Badge>
+                    </div>
+                    <div className="mt-4 flex items-center justify-between">
+                        <span className="text-base font-bold">£{p.price.toFixed(2)}</span>
+                        <span className="text-[10px] text-muted-foreground">{p.purchase_count} sold</span>
+                    </div>
+                </div>
+            </Card>
         </Link>
     );
 }
@@ -198,25 +217,29 @@ function RecCard({ rec: r, source }: { rec: ShopRecommendation; source: string }
             onClick={() => {
                 tracker.trackClickRecommendation(r.id, source);
             }}
-            className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:border-emerald-500/50 hover:shadow-md"
+            className="group block"
         >
-            <div className="relative aspect-square overflow-hidden bg-muted">
-                <img
-                    src={r.image_url}
-                    alt={r.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    loading="lazy"
-                />
-            </div>
-            <div className="flex flex-1 flex-col p-3">
-                <h3 className="line-clamp-2 text-sm font-medium group-hover:text-emerald-600">{r.name}</h3>
-                <span className="mt-1.5 w-fit rounded-md bg-secondary/80 px-2 py-0.5 text-[10px] font-medium text-secondary-foreground transition-colors group-hover:bg-emerald-100 group-hover:text-emerald-700">
-                    {r.category}
-                </span>
-                <div className="mt-auto flex items-center justify-between pt-2">
-                    <span className="text-base font-bold text-emerald-600">£{r.price.toFixed(2)}</span>
+            <Card className="h-full overflow-hidden transition-all hover:border-primary/50 hover:shadow-md">
+                <div className="relative aspect-square overflow-hidden bg-muted">
+                    <img
+                        src={r.image_url}
+                        alt={r.name}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        loading="lazy"
+                    />
                 </div>
-            </div>
+                <div className="flex flex-col p-3">
+                    <h3 className="line-clamp-2 text-sm font-medium group-hover:text-primary">{r.name}</h3>
+                    <div className="mt-1.5">
+                        <Badge variant="secondary" className="text-[10px] font-medium">
+                            {r.category}
+                        </Badge>
+                    </div>
+                    <div className="mt-4 flex items-center justify-between">
+                        <span className="text-base font-bold">£{r.price.toFixed(2)}</span>
+                    </div>
+                </div>
+            </Card>
         </Link>
     );
 }
