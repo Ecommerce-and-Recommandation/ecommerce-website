@@ -10,6 +10,7 @@ interface AuthUser {
     email: string;
     name: string;
     country: string;
+    is_admin: boolean;
 }
 
 interface AuthState {
@@ -24,8 +25,10 @@ const AUTH_KEY = 'ecommerce_auth';
 function loadState(): AuthState {
     try {
         const raw = localStorage.getItem(AUTH_KEY);
-        if (raw) return JSON.parse(raw);
-    } catch {}
+        if (raw) return JSON.parse(raw) as AuthState;
+    } catch (e) {
+        console.debug('Failed to parse auth state', e);
+    }
     return { token: null, user: null };
 }
 
@@ -33,7 +36,9 @@ let state: AuthState = loadState();
 const listeners = new Set<Listener>();
 
 function emit() {
-    listeners.forEach((l) => l());
+    listeners.forEach((l) => {
+        l();
+    });
 }
 
 function persist(s: AuthState) {
@@ -75,11 +80,12 @@ api.interceptors.request.use((cfg) => {
 
 api.interceptors.response.use(
     (r) => r,
-    (err) => {
-        if (err?.response?.status === 401) {
+    (err: unknown) => {
+        const error = err as { response?: { status?: number } };
+        if (error.response?.status === 401) {
             auth.logout();
         }
-        return Promise.reject(err);
+        return Promise.reject(err instanceof Error ? err : new Error(String(err)));
     },
 );
 

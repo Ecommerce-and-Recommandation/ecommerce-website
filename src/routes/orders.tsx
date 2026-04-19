@@ -60,7 +60,11 @@ function OrdersPage() {
                                     ) : (
                                         <Clock className="h-4 w-4 text-amber-500" />
                                     )}
-                                    <span className={order.status === 'COMPLETED' || order.status === 'DELIVERED' ? 'text-emerald-500' : 'text-amber-500'}>
+                                    <span
+                                        className={
+                                            order.status === 'COMPLETED' || order.status === 'DELIVERED' ? 'text-emerald-500' : 'text-amber-500'
+                                        }
+                                    >
                                         {order.status}
                                     </span>
                                 </div>
@@ -81,7 +85,7 @@ function OrdersPage() {
                                 </div>
                             ))}
                         </div>
-                        
+
                         {order.discount_amount > 0 && (
                             <div className="bg-emerald-50/50 border-t px-6 py-4 flex justify-between items-center text-sm">
                                 <span className="font-medium text-emerald-700">Promotion Applied</span>

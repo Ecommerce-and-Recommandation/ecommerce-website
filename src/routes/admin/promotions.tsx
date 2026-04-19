@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { adminPromotionsApi, type PromotionData, type PromoSuggestion } from '@/lib/api';
+import { adminPromotionsApi, type PromoSuggestion } from '@/lib/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Ticket, Sparkles, Plus, Trash2, Loader2, ArrowRight } from 'lucide-react';
+import { Sparkles, Plus, Trash2, Loader2, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 
 function AdminPromotionsPage() {
@@ -22,7 +22,7 @@ function AdminPromotionsPage() {
     const createMutation = useMutation({
         mutationFn: adminPromotionsApi.createPromotion,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-promos'] });
+            void queryClient.invalidateQueries({ queryKey: ['admin-promos'] });
             setCode('');
             setDiscountValue(10);
         },
@@ -31,7 +31,7 @@ function AdminPromotionsPage() {
     const deleteMutation = useMutation({
         mutationFn: adminPromotionsApi.deletePromotion,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['admin-promos'] });
+            void queryClient.invalidateQueries({ queryKey: ['admin-promos'] });
         },
     });
 
@@ -41,7 +41,7 @@ function AdminPromotionsPage() {
     const [discountValue, setDiscountValue] = useState<number>(10);
     const [minOrder, setMinOrder] = useState<number>(0);
 
-    function handleCreate(e: React.FormEvent) {
+    function handleCreate(e: React.SyntheticEvent) {
         e.preventDefault();
         createMutation.mutate({
             code: code.toUpperCase(),
@@ -101,7 +101,9 @@ function AdminPromotionsPage() {
                                         <p className="font-mono text-sm font-bold">{s.suggested_promo.code}</p>
                                     </div>
                                     <button
-                                        onClick={() => handleAcceptSuggestion(s)}
+                                        onClick={() => {
+                                            handleAcceptSuggestion(s);
+                                        }}
                                         disabled={createMutation.isPending}
                                         className="flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
                                     >
@@ -140,11 +142,11 @@ function AdminPromotionsPage() {
                                         <tr key={p.id} className="transition-colors hover:bg-muted/50">
                                             <td className="px-6 py-4 font-mono font-semibold text-emerald-600">{p.code}</td>
                                             <td className="px-6 py-4">
-                                                {p.discount_type === 'PERCENTAGE' ? `${p.discount_value}%` : `£${p.discount_value}`}
+                                                {p.discount_type === 'PERCENTAGE' ? `${p.discount_value.toString()}%` : `£${p.discount_value.toString()}`}
                                             </td>
                                             <td className="px-6 py-4">£{p.min_order_amount}</td>
                                             <td className="px-6 py-4">
-                                                {p.times_used} {p.usage_limit ? `/ ${p.usage_limit}` : ''}
+                                                {p.times_used.toString()} {p.usage_limit ? `/ ${p.usage_limit.toString()}` : ''}
                                             </td>
                                             <td className="px-6 py-4">
                                                 {p.is_active ? (
@@ -159,7 +161,9 @@ function AdminPromotionsPage() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <button
-                                                    onClick={() => deleteMutation.mutate(p.id)}
+                                                    onClick={() => {
+                                                        deleteMutation.mutate(p.id);
+                                                    }}
                                                     className="text-muted-foreground hover:text-red-500"
                                                     title="Delete"
                                                 >
@@ -190,7 +194,9 @@ function AdminPromotionsPage() {
                             <input
                                 required
                                 value={code}
-                                onChange={(e) => setCode(e.target.value)}
+                                onChange={(e) => {
+                                    setCode(e.target.value);
+                                }}
                                 placeholder="SUMMER20"
                                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm uppercase placeholder:normal-case"
                             />
@@ -200,7 +206,9 @@ function AdminPromotionsPage() {
                                 <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Type</label>
                                 <select
                                     value={discountType}
-                                    onChange={(e) => setDiscountType(e.target.value)}
+                                    onChange={(e) => {
+                                        setDiscountType(e.target.value);
+                                    }}
                                     className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                                 >
                                     <option value="PERCENTAGE">% Off</option>
@@ -214,7 +222,9 @@ function AdminPromotionsPage() {
                                     type="number"
                                     min="1"
                                     value={discountValue}
-                                    onChange={(e) => setDiscountValue(Number(e.target.value))}
+                                    onChange={(e) => {
+                                        setDiscountValue(Number(e.target.value));
+                                    }}
                                     className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                                 />
                             </div>
@@ -225,7 +235,9 @@ function AdminPromotionsPage() {
                                 type="number"
                                 min="0"
                                 value={minOrder}
-                                onChange={(e) => setMinOrder(Number(e.target.value))}
+                                onChange={(e) => {
+                                    setMinOrder(Number(e.target.value));
+                                }}
                                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                             />
                         </div>

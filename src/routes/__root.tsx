@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { tracker } from '@/lib/tracker';
 
 function RootLayout() {
-    const { isLoggedIn, user, logout } = useAuth();
+    const { isLoggedIn, user } = useAuth();
     const routerState = useRouterState();
     const pathname = routerState.location.pathname;
     const isLoginPage = pathname === '/login';
@@ -36,7 +36,7 @@ function RootLayout() {
 
 function LoginRedirect() {
     const navigate = useNavigate();
-    navigate({ to: '/login' });
+    void navigate({ to: '/login' });
     return null;
 }
 
@@ -48,11 +48,11 @@ function ShopLayout() {
     const [search, setSearch] = useState('');
     const navigate = useNavigate();
 
-    function handleSearch(e: React.FormEvent) {
+    function handleSearch(e: React.SyntheticEvent) {
         e.preventDefault();
         if (search.trim()) {
             tracker.trackSearch(search.trim());
-            navigate({ to: '/', search: { search: search.trim() } });
+            void navigate({ to: '/', search: { search: search.trim() } });
         }
     }
 
@@ -74,7 +74,9 @@ function ShopLayout() {
                             <input
                                 type="text"
                                 value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                }}
                                 placeholder="Search products..."
                                 className="w-full rounded-xl border bg-muted/50 py-2.5 pl-10 pr-4 text-sm placeholder-muted-foreground transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                             />
@@ -112,7 +114,13 @@ function ShopLayout() {
 
                         <div className="flex items-center gap-2 rounded-xl border px-3 py-2">
                             <span className="text-sm text-muted-foreground">{user?.name}</span>
-                            <button onClick={logout} className="text-muted-foreground transition-colors hover:text-red-500" title="Logout">
+                            <button
+                                onClick={() => {
+                                    logout();
+                                }}
+                                className="text-muted-foreground transition-colors hover:text-red-500"
+                                title="Logout"
+                            >
                                 <LogOut className="h-4 w-4" />
                             </button>
                         </div>
@@ -170,7 +178,12 @@ function AdminLayout() {
                 <div className="border-t px-4 py-3">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{user?.name}</span>
-                        <button onClick={logout} className="hover:text-red-400">
+                        <button
+                            onClick={() => {
+                                logout();
+                            }}
+                            className="hover:text-red-400"
+                        >
                             <LogOut className="h-3.5 w-3.5" />
                         </button>
                     </div>

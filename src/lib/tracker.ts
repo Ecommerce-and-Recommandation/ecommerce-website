@@ -34,7 +34,7 @@ async function flush() {
     try {
         await api.post('/behavior/track', { events: batch });
         // Invalidate recommendation cache so UI picks up new behavior data
-        queryClient.invalidateQueries({ queryKey: ['shopRecommendations'] });
+        void queryClient.invalidateQueries({ queryKey: ['shopRecommendations'] });
     } catch {
         // Put events back on failure
         buffer = [...batch, ...buffer];
@@ -45,7 +45,9 @@ function ensureTimer() {
     if (flushTimer) return;
     flushTimer = setInterval(flush, 10_000);
     // Flush on page close
-    window.addEventListener('beforeunload', flush);
+    window.addEventListener('beforeunload', () => {
+        void flush();
+    });
 }
 
 export const tracker = {
@@ -71,7 +73,7 @@ export const tracker = {
     trackAddToCart(productId: number) {
         this.track({ event_type: 'add_to_cart', product_id: productId });
         // Flush immediately on add-to-cart (high-signal event)
-        flush();
+        void flush();
     },
 
     trackRemoveFromCart(productId: number) {
@@ -82,7 +84,7 @@ export const tracker = {
         if (!query.trim()) return;
         this.track({ event_type: 'search', metadata: { query: query.trim() } });
         // Flush immediately on search (affects recommendations)
-        flush();
+        void flush();
     },
 
     trackClickRecommendation(productId: number, source: string) {

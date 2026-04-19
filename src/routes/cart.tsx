@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useCart, useRemoveFromCart, useUpdateCartItem } from '@/lib/hooks';
 import { Loader2, Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Check } from 'lucide-react';
 import { tracker } from '@/lib/tracker';
-import { adminPromotionsApi, shopApi, type CartItemData, type PromotionData } from '@/lib/api';
+import { adminPromotionsApi, shopApi, type CartItemData } from '@/lib/api';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -58,10 +58,8 @@ function CartPage() {
             if (!isValid) {
                 setDiscountData({ valid: false, message: 'Applied promotion is no longer valid for this cart total.', amount: 0, id: null });
             } else {
-                const newAmount = isValid.discount_type === 'PERCENTAGE' 
-                    ? (selectedTotal * isValid.discount_value) / 100 
-                    : isValid.discount_value;
-                setDiscountData(prev => ({ ...prev, amount: newAmount }));
+                const newAmount = isValid.discount_type === 'PERCENTAGE' ? (selectedTotal * isValid.discount_value) / 100 : isValid.discount_value;
+                setDiscountData((prev) => ({ ...prev, amount: newAmount }));
             }
         }
     }, [availablePromos, discountData.valid, discountData.id, selectedTotal]);
@@ -93,7 +91,7 @@ function CartPage() {
         const groups: Record<string, CartItemData[]> = {};
         for (const item of cart.items) {
             const dateStr = item.added_at ? item.added_at.split('T')[0] : 'Earlier';
-            if (!groups[dateStr]) groups[dateStr] = [];
+            groups[dateStr] ??= [];
             groups[dateStr].push(item);
         }
         return groups;
@@ -114,7 +112,7 @@ function CartPage() {
     }
 
     function toggleGroup(dateStr: string) {
-        const items = groupedItems[dateStr] || [];
+        const items = groupedItems[dateStr] ?? [];
         const itemIds = items.map((i) => i.id);
         const allSelected = itemIds.every((id) => selectedItemIds.has(id));
 
@@ -126,7 +124,7 @@ function CartPage() {
         setSelectedItemIds(next);
     }
 
-    async function handlePromoSelect(promoIdStr: string) {
+    function handlePromoSelect(promoIdStr: string) {
         if (promoIdStr === 'none') {
             setDiscountData({ valid: false, message: '', amount: 0, id: null });
             return;
@@ -152,12 +150,12 @@ function CartPage() {
     async function handleConfirmCheckout() {
         setIsCheckingOut(true);
         try {
-            const res = await shopApi.checkout(Array.from(selectedItemIds), discountData.id || undefined);
+            const res = await shopApi.checkout(Array.from(selectedItemIds), discountData.id ?? undefined);
             setCheckoutMessage(res.message);
             // Invalidate cart to show it empty now
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
-        } catch (error: any) {
-            setCheckoutMessage('Checkout failed. Please try again.');
+            void queryClient.invalidateQueries({ queryKey: ['cart'] });
+        } catch (error) {
+            setCheckoutMessage(error instanceof Error ? error.message : 'Checkout failed. Please try again.');
         } finally {
             setIsCheckingOut(false);
         }
@@ -212,7 +210,9 @@ function CartPage() {
                                 {/* Group Header */}
                                 <div className="flex items-center gap-3 border-b pb-2">
                                     <button
-                                        onClick={() => toggleGroup(dateStr)}
+                                        onClick={() => {
+                                            toggleGroup(dateStr);
+                                        }}
                                         className={`flex h-5 w-5 items-center justify-center rounded border ${allSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-input hover:border-emerald-500'}`}
                                     >
                                         {allSelected && <Check className="h-3.5 w-3.5" />}
@@ -232,7 +232,9 @@ function CartPage() {
                                                 {/* Checkbox */}
                                                 <div className="flex items-center">
                                                     <button
-                                                        onClick={() => toggleSelection(item.id)}
+                                                        onClick={() => {
+                                                            toggleSelection(item.id);
+                                                        }}
                                                         className={`flex h-5 w-5 items-center justify-center rounded border ${isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-input hover:border-emerald-500'}`}
                                                     >
                                                         {isSelected && <Check className="h-3.5 w-3.5" />}
@@ -262,14 +264,18 @@ function CartPage() {
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
                                                             <button
-                                                                onClick={() => handleQuantity(item, -1)}
+                                                                onClick={() => {
+                                                                    handleQuantity(item, -1);
+                                                                }}
                                                                 className="flex h-8 w-8 items-center justify-center rounded-lg border transition-colors hover:border-emerald-500"
                                                             >
                                                                 <Minus className="h-3.5 w-3.5" />
                                                             </button>
                                                             <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
                                                             <button
-                                                                onClick={() => handleQuantity(item, 1)}
+                                                                onClick={() => {
+                                                                    handleQuantity(item, 1);
+                                                                }}
                                                                 className="flex h-8 w-8 items-center justify-center rounded-lg border transition-colors hover:border-emerald-500"
                                                             >
                                                                 <Plus className="h-3.5 w-3.5" />
@@ -281,7 +287,9 @@ function CartPage() {
                                                                 £{(item.product_price * item.quantity).toFixed(2)}
                                                             </span>
                                                             <button
-                                                                onClick={() => handleRemove(item)}
+                                                                onClick={() => {
+                                                                    handleRemove(item);
+                                                                }}
                                                                 className="text-muted-foreground transition-colors hover:text-red-500"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
@@ -313,7 +321,7 @@ function CartPage() {
 
                         {discountData.valid && (
                             <div className="flex justify-between text-sm text-emerald-600">
-                                <span>{availablePromos?.find((p) => p.id === discountData.id)?.code || 'Discount'}</span>
+                                <span>{availablePromos?.find((p) => p.id === discountData.id)?.code ?? 'Discount'}</span>
                                 <span>-£{discountData.amount.toFixed(2)}</span>
                             </div>
                         )}
@@ -328,12 +336,14 @@ function CartPage() {
 
                     <div className="mt-4">
                         <Select
-                            value={discountData.id ? String(discountData.id) : 'none'}
-                            onValueChange={handlePromoSelect}
-                            disabled={selectedCount === 0 || !availablePromos?.length}
+                            value={discountData.id !== null ? String(discountData.id) : 'none'}
+                            onValueChange={(val) => {
+                                handlePromoSelect(val);
+                            }}
+                            disabled={selectedCount === 0 || !(availablePromos?.length ?? 0)}
                         >
                             <SelectTrigger className="w-full bg-muted/30">
-                                <SelectValue placeholder={availablePromos?.length ? 'Select a Promotion' : 'No promotions applied'} />
+                                <SelectValue placeholder={(availablePromos?.length ?? 0) > 0 ? 'Select a Promotion' : 'No promotions applied'} />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="none">No promotion</SelectItem>
@@ -342,7 +352,9 @@ function CartPage() {
                                         <div className="flex justify-between items-center w-full gap-4">
                                             <span className="font-medium">{promo.code}</span>
                                             <span className="text-xs text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">
-                                                {promo.discount_type === 'PERCENTAGE' ? `-${promo.discount_value}%` : `-£${promo.discount_value}`}
+                                                {promo.discount_type === 'PERCENTAGE'
+                                                    ? `-${promo.discount_value.toString()}%`
+                                                    : `-£${promo.discount_value.toString()}`}
                                             </span>
                                         </div>
                                     </SelectItem>
@@ -350,12 +362,12 @@ function CartPage() {
                             </SelectContent>
                         </Select>
                     </div>
-                    {discountData.message && discountData.valid === false && (
-                        <p className="mt-2 text-xs font-semibold text-red-500">{discountData.message}</p>
-                    )}
+                    {discountData.message && !discountData.valid && <p className="mt-2 text-xs font-semibold text-red-500">{discountData.message}</p>}
 
                     <button
-                        onClick={() => setShowCheckoutModal(true)}
+                        onClick={() => {
+                            setShowCheckoutModal(true);
+                        }}
                         disabled={selectedCount === 0}
                         className="mt-6 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3.5 font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -393,20 +405,24 @@ function CartPage() {
                             <>
                                 <h2 className="text-xl font-bold mb-4">Confirm Checkout</h2>
                                 <p className="text-muted-foreground mb-6">
-                                    You are about to place an order for {selectedCount} items totaling{' '}
+                                    You are about to place an order for {selectedCount.toString()} items totaling{' '}
                                     <span className="font-bold text-foreground">£{Math.max(0, selectedTotal - discountData.amount).toFixed(2)}</span>.
                                     This action cannot be undone. Are you sure you want to proceed?
                                 </p>
                                 <div className="flex gap-3">
                                     <button
-                                        onClick={() => setShowCheckoutModal(false)}
+                                        onClick={() => {
+                                            setShowCheckoutModal(false);
+                                        }}
                                         disabled={isCheckingOut}
                                         className="flex-1 rounded-xl border py-3 font-semibold hover:bg-muted"
                                     >
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={handleConfirmCheckout}
+                                        onClick={() => {
+                                            void handleConfirmCheckout();
+                                        }}
                                         disabled={isCheckingOut}
                                         className="flex-1 rounded-xl bg-emerald-500 py-3 font-semibold text-white hover:bg-emerald-600 flex justify-center items-center gap-2"
                                     >

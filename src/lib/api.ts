@@ -173,7 +173,7 @@ export const mlApi = {
             .get<RecommendationResponse>(`/recommend/${stockCode}`, {
                 params: { top_k: topK },
             })
-            .then((r) => r.data),
+            .then((r): RecommendationResponse => r.data),
 
     segmentCustomer: (features: CustomerFeatures) => api.post<SegmentInfo>('/segment/customer', features).then((r) => r.data),
 
@@ -188,7 +188,7 @@ export const shopApi = {
     products: (params: { category?: string; search?: string; page?: number; page_size?: number }) =>
         api.get<ProductListResponse>('/products', { params }).then((r) => r.data),
 
-    product: (id: number) => api.get<ShopProduct>(`/products/${id}`).then((r) => r.data),
+    product: (id: number) => api.get<ShopProduct>(`/products/${id.toString()}`).then((r): ShopProduct => r.data),
 
     categories: () => api.get<CategoryInfo[]>('/products/categories').then((r) => r.data),
 
@@ -196,9 +196,9 @@ export const shopApi = {
 
     addToCart: (product_id: number, quantity = 1) => api.post<CartItemData>('/cart', { product_id, quantity }).then((r) => r.data),
 
-    updateCartItem: (itemId: number, quantity: number) => api.patch(`/cart/${itemId}`, { quantity }).then((r) => r.data),
+    updateCartItem: (itemId: number, quantity: number) => api.patch<{ message: string }>(`/cart/${itemId.toString()}`, { quantity }).then((r): { message: string } => r.data),
 
-    removeFromCart: (itemId: number) => api.delete(`/cart/${itemId}`).then((r) => r.data),
+    removeFromCart: (itemId: number) => api.delete<{ message: string }>(`/cart/${itemId.toString()}`).then((r): { message: string } => r.data),
 
     recommendations: (currentProductId?: number) =>
         api
@@ -250,12 +250,11 @@ export interface PromoSuggestion {
 export const adminPromotionsApi = {
     getPromotions: () => api.get<PromotionData[]>('/promotions').then((r) => r.data),
 
-    getAvailablePromotions: (cart_total: number) =>
-        api.get<PromotionData[]>('/promotions/available', { params: { cart_total } }).then((r) => r.data),
+    getAvailablePromotions: (cart_total: number) => api.get<PromotionData[]>('/promotions/available', { params: { cart_total } }).then((r) => r.data),
 
     createPromotion: (data: Partial<PromotionData>) => api.post<PromotionData>('/promotions', data).then((r) => r.data),
 
-    deletePromotion: (id: number) => api.delete(`/promotions/${id}`).then((r) => r.data),
+    deletePromotion: (id: number) => api.delete<{ message: string }>(`/promotions/${id.toString()}`).then((r): { message: string } => r.data),
 
     getSuggestions: () => api.get<PromoSuggestion[]>('/promotions/insights/suggestions').then((r) => r.data),
 
@@ -292,5 +291,5 @@ export interface OrderData {
 export const ordersApi = {
     getMyOrders: () => api.get<OrderData[]>('/orders/me').then((r) => r.data),
     getAdminOrders: () => api.get<OrderData[]>('/admin/orders').then((r) => r.data),
-    updateOrderStatus: (id: number, status: string) => api.put(`/admin/orders/${id}/status`, { status }).then((r) => r.data),
+    updateOrderStatus: (id: number, status: string) => api.put<{ message: string }>(`/admin/orders/${id.toString()}/status`, { status }).then((r): { message: string } => r.data),
 };
