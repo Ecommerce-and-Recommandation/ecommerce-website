@@ -11,13 +11,13 @@ function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    async function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.SyntheticEvent) {
         e.preventDefault();
         setError('');
         setLoading(true);
         try {
             await login(email, password);
-            navigate({ to: '/' });
+            void navigate({ to: '/' });
         } catch {
             setError('Email hoặc mật khẩu không đúng');
         } finally {
@@ -37,14 +37,12 @@ function LoginPage() {
                 </div>
 
                 <form
-                    onSubmit={handleSubmit}
+                    onSubmit={(e) => {
+                        void handleSubmit(e);
+                    }}
                     className="space-y-5 rounded-2xl border border-slate-700/50 bg-slate-800/60 p-8 shadow-2xl backdrop-blur-sm"
                 >
-                    {error && (
-                        <div className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400 ring-1 ring-red-500/20">
-                            {error}
-                        </div>
-                    )}
+                    {error && <div className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400 ring-1 ring-red-500/20">{error}</div>}
 
                     <div className="space-y-2">
                         <label htmlFor="email" className="block text-sm font-medium text-slate-300">
@@ -54,7 +52,9 @@ function LoginPage() {
                             id="email"
                             type="email"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                            }}
                             className="w-full rounded-xl border border-slate-600 bg-slate-700/50 px-4 py-3 text-white placeholder-slate-400 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                             placeholder="demo@shop.com"
                             required
@@ -69,7 +69,9 @@ function LoginPage() {
                             id="password"
                             type="password"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                            }}
                             className="w-full rounded-xl border border-slate-600 bg-slate-700/50 px-4 py-3 text-white placeholder-slate-400 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                             placeholder="••••••••"
                             required
@@ -85,9 +87,7 @@ function LoginPage() {
                         {loading ? 'Signing in...' : 'Sign In'}
                     </button>
 
-                    <p className="text-center text-xs text-slate-500">
-                        Demo: demo@shop.com / demo1234
-                    </p>
+                    <p className="text-center text-xs text-slate-500">Demo: demo@shop.com / demo1234</p>
                 </form>
             </div>
         </div>

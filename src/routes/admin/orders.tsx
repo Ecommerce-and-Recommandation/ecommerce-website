@@ -122,8 +122,10 @@ function AdminOrdersPage() {
                                         <td className="px-6 py-4">
                                             <Select
                                                 value={order.status}
-                                                onValueChange={(val) => updateStatus.mutate({ id: order.id, status: val })}
-                                                disabled={updateStatus.isPending && updateStatus.variables?.id === order.id}
+                                                onValueChange={(val) => {
+                                                    updateStatus.mutate({ id: order.id, status: val });
+                                                }}
+                                                disabled={updateStatus.isPending && updateStatus.variables.id === order.id}
                                             >
                                                 <SelectTrigger className="w-[140px] h-8 text-xs font-semibold">
                                                     <SelectValue />

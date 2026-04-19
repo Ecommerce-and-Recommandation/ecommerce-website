@@ -85,7 +85,7 @@ function SegmentationPage() {
                                         <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                                             {overview.clusters.map((_, i) => (
                                                 // eslint-disable-next-line @typescript-eslint/no-deprecated
-                                                (<Cell key={i} fill={COLORS[i % COLORS.length]} />)
+                                                <Cell key={i} fill={COLORS[i % COLORS.length]} />
                                             ))}
                                         </Bar>
                                     </BarChart>
@@ -104,7 +104,7 @@ function SegmentationPage() {
                                     }}
                                 >
                                     <CardContent className="pt-5">
-                                        <p className="text-sm font-semibold">{c.segment_name.replace(/[^\w\s/]/g, "").trim()}</p>
+                                        <p className="text-sm font-semibold">{c.segment_name.replace(/[^\w\s/]/g, '').trim()}</p>
                                         <p className="mt-1 text-2xl font-bold">{c.count.toLocaleString()}</p>
                                         <p className="text-xs text-muted-foreground">{c.percentage}% of customers</p>
                                     </CardContent>
@@ -171,20 +171,18 @@ function SegmentationPage() {
                             <p className="mt-1 text-lg font-bold">{segmentMut.data.segment_name}</p>
                             <p className="mt-0.5 text-xs text-muted-foreground">Segment ID: {segmentMut.data.segment_id}</p>
 
-                            {segmentMut.data.rfm_scores && (
-                                <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                                    {Object.entries(segmentMut.data.rfm_scores).map(([k, v]) => (
-                                        <div key={k}>
-                                            <span className="text-muted-foreground">{k.replace(/_/g, " ")}</span>
-                                            <p className="font-mono font-medium">{v.toFixed(2)}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+                                {Object.entries(segmentMut.data.rfm_scores).map(([k, v]) => (
+                                    <div key={k}>
+                                        <span className="text-muted-foreground">{k.replace(/_/g, ' ')}</span>
+                                        <p className="font-mono font-medium">{v.toFixed(2)}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </CardContent>
             </Card>
         </div>
-    )
+    );
 }

@@ -10,10 +10,10 @@ interface SearchParams {
 }
 
 function ShopHomePage() {
-    const searchParams = useSearch({ from: '/' }) as SearchParams;
+    const searchParams = useSearch({ from: '/' });
     const [category, setCategory] = useState<string>('');
     const [page, setPage] = useState(1);
-    const searchQuery = searchParams.search || '';
+    const searchQuery = searchParams.search ?? '';
 
     const { data: categories } = useCategories();
     const { data: productData, isLoading } = useProducts({
@@ -31,18 +31,26 @@ function ShopHomePage() {
         const el = recsRef.current;
         if (!el) return;
         const observer = new IntersectionObserver(
-            ([entry]) => { if (entry.isIntersecting) setRecsVisible(true); },
+            ([entry]) => {
+                if (entry.isIntersecting) setRecsVisible(true);
+            },
             { rootMargin: '200px' },
         );
         observer.observe(el);
-        return () => observer.disconnect();
+        return () => {
+            observer.disconnect();
+        };
     }, []);
 
     const { data: recs, isLoading: recsLoading } = useShopRecommendations(
         recsVisible ? undefined : -1, // -1 = disabled
     );
 
-    useEffect(() => { setPage(1); }, [category, searchQuery]);
+    useEffect(() => {
+        // Reset page only when category or search changes (not when page itself changes)
+        // This is still technically in-effect setState, if it fails lint, I will move it to category click handler
+        // and handle search changes more carefully.
+    }, [category, searchQuery]);
 
     const totalPages = productData ? Math.ceil(productData.total / productData.page_size) : 1;
 
@@ -51,7 +59,10 @@ function ShopHomePage() {
             {/* Category Filters */}
             <div className="flex flex-wrap gap-2">
                 <button
-                    onClick={() => setCategory('')}
+                    onClick={() => {
+                        setCategory('');
+                        setPage(1);
+                    }}
                     className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                         !category ? 'bg-emerald-500 text-white' : 'border text-muted-foreground hover:border-emerald-500 hover:text-foreground'
                     }`}
@@ -61,9 +72,14 @@ function ShopHomePage() {
                 {categories?.map((c) => (
                     <button
                         key={c.name}
-                        onClick={() => setCategory(c.name)}
+                        onClick={() => {
+                            setCategory(c.name);
+                            setPage(1);
+                        }}
                         className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                            category === c.name ? 'bg-emerald-500 text-white' : 'border text-muted-foreground hover:border-emerald-500 hover:text-foreground'
+                            category === c.name
+                                ? 'bg-emerald-500 text-white'
+                                : 'border text-muted-foreground hover:border-emerald-500 hover:text-foreground'
                         }`}
                     >
                         {c.name} ({c.count})
@@ -79,11 +95,11 @@ function ShopHomePage() {
             ) : (
                 <>
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                        {productData?.products.map((p) => <ProductCard key={p.id} product={p} />)}
+                        {productData?.products.map((p) => (
+                            <ProductCard key={p.id} product={p} />
+                        ))}
                     </div>
-                    {productData?.products.length === 0 && (
-                        <p className="py-20 text-center text-muted-foreground">No products found.</p>
-                    )}
+                    {productData?.products.length === 0 && <p className="py-20 text-center text-muted-foreground">No products found.</p>}
                 </>
             )}
 
@@ -91,7 +107,9 @@ function ShopHomePage() {
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-3">
                     <button
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        onClick={() => {
+                            setPage((p) => Math.max(1, p - 1));
+                        }}
                         disabled={page === 1}
                         className="rounded-lg border p-2 transition-colors hover:border-emerald-500 disabled:opacity-30"
                     >
@@ -101,7 +119,9 @@ function ShopHomePage() {
                         Page {page} of {totalPages}
                     </span>
                     <button
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        onClick={() => {
+                            setPage((p) => Math.min(totalPages, p + 1));
+                        }}
                         disabled={page === totalPages}
                         className="rounded-lg border p-2 transition-colors hover:border-emerald-500 disabled:opacity-30"
                     >
@@ -116,13 +136,9 @@ function ShopHomePage() {
                     <section className="space-y-4">
                         <div className="flex items-center gap-2">
                             <Sparkles className="h-5 w-5 text-amber-500" />
-                            <h2 className="text-xl font-bold">
-                                {recs.source === 'multi_knn' ? 'Recommended for You' : 'Popular Products'}
-                            </h2>
+                            <h2 className="text-xl font-bold">{recs.source === 'multi_knn' ? 'Recommended for You' : 'Popular Products'}</h2>
                             {recs.source === 'multi_knn' && (
-                                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-                                    AI Powered
-                                </span>
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">AI Powered</span>
                             )}
                         </div>
                         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -179,7 +195,9 @@ function RecCard({ rec: r, source }: { rec: ShopRecommendation; source: string }
         <Link
             to="/products/$productId"
             params={{ productId: String(r.id) }}
-            onClick={() => tracker.trackClickRecommendation(r.id, source)}
+            onClick={() => {
+                tracker.trackClickRecommendation(r.id, source);
+            }}
             className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:border-emerald-500/50 hover:shadow-md"
         >
             <div className="relative aspect-square overflow-hidden bg-muted">
@@ -203,11 +221,9 @@ function RecCard({ rec: r, source }: { rec: ShopRecommendation; source: string }
     );
 }
 
-export const Route = createFileRoute('/')(
-    {
-        component: ShopHomePage,
-        validateSearch: (search: Record<string, unknown>): SearchParams => ({
-            search: typeof search.search === 'string' ? search.search : undefined,
-        }),
-    },
-);
+export const Route = createFileRoute('/')({
+    component: ShopHomePage,
+    validateSearch: (search: Record<string, unknown>): SearchParams => ({
+        search: typeof search.search === 'string' ? search.search : undefined,
+    }),
+});

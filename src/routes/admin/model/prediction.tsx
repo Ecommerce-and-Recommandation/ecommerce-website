@@ -120,7 +120,7 @@ function PredictionPage() {
                                             <ShieldAlert className="h-8 w-8 text-red-500" />
                                         )}
                                         <div>
-                                            <p className="text-lg font-bold">{result.will_purchase ? "Sẽ mua lại ✅" : "Không mua lại ❌"}</p>
+                                            <p className="text-lg font-bold">{result.will_purchase ? 'Sẽ mua lại ✅' : 'Không mua lại ❌'}</p>
                                             <p className="text-sm text-muted-foreground">Xác suất: {(result.probability * 100).toFixed(1)}%</p>
                                         </div>
                                     </div>

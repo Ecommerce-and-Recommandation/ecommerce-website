@@ -10,7 +10,7 @@ function ProductDetailPage() {
     const id = Number(productId);
     const { data: product, isLoading } = useProduct(id);
     const addToCart = useAddToCart();
-    const viewStart = useRef(Date.now());
+    const viewStart = useRef<number>(0);
     const [quantity, setQuantity] = useState(1);
 
     // Provide brief success feedback then allow adding again
@@ -37,7 +37,9 @@ function ProductDetailPage() {
             { rootMargin: '200px' },
         );
         observer.observe(el);
-        return () => observer.disconnect();
+        return () => {
+            observer.disconnect();
+        };
     }, []);
 
     const { data: recs, isLoading: recsLoading } = useShopRecommendations(recsVisible ? id : undefined);
@@ -58,7 +60,9 @@ function ProductDetailPage() {
 
         // Visual feedback
         setJustAdded(true);
-        setTimeout(() => setJustAdded(false), 2000);
+        setTimeout(() => {
+            setJustAdded(false);
+        }, 2000);
     }
 
     if (isLoading) {
@@ -108,7 +112,9 @@ function ProductDetailPage() {
                         {/* Quantity Selector */}
                         <div className="flex items-center gap-3 rounded-xl border bg-background px-3 py-2">
                             <button
-                                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                                onClick={() => {
+                                    setQuantity((q) => Math.max(1, q - 1));
+                                }}
                                 disabled={quantity <= 1 || addToCart.isPending}
                                 className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-50"
                             >
@@ -116,7 +122,9 @@ function ProductDetailPage() {
                             </button>
                             <span className="w-8 text-center text-lg font-medium">{quantity}</span>
                             <button
-                                onClick={() => setQuantity((q) => q + 1)}
+                                onClick={() => {
+                                    setQuantity((q) => q + 1);
+                                }}
                                 disabled={addToCart.isPending}
                                 className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-50"
                             >
@@ -198,7 +206,9 @@ function ProductDetailPage() {
                                         key={r.stock_code}
                                         to="/products/$productId"
                                         params={{ productId: String(r.id) }}
-                                        onClick={() => tracker.trackClickRecommendation(r.id, 'detail_page')}
+                                        onClick={() => {
+                                            tracker.trackClickRecommendation(r.id, 'detail_page');
+                                        }}
                                         className="group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:border-emerald-500/50 hover:shadow-md"
                                     >
                                         <div className="relative aspect-square overflow-hidden bg-muted">
