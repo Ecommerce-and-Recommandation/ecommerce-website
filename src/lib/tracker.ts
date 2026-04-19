@@ -10,7 +10,7 @@
  * - click_recommendation: when user clicks a recommended product
  */
 
-import { api } from './api';
+import { apiClient as api } from '@/services/apiClient';
 import { auth } from './auth';
 import { queryClient } from './queryClient';
 
