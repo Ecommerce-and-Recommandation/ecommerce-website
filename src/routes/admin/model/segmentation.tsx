@@ -10,7 +10,7 @@ import { Loader2, Users } from 'lucide-react';
 
 const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'];
 
-export const Route = createFileRoute('/admin/segmentation')({
+export const Route = createFileRoute('/admin/model/segmentation')({
     component: SegmentationPage,
 });
 
@@ -52,7 +52,6 @@ function SegmentationPage() {
                 <h1 className="text-3xl font-bold tracking-tight">Customer Segmentation</h1>
                 <p className="text-muted-foreground">Phân khúc khách hàng bằng K-Means + PCA</p>
             </div>
-
             {/* Overview */}
             {isLoading ? (
                 <div className="flex h-40 items-center justify-center">
@@ -86,7 +85,7 @@ function SegmentationPage() {
                                         <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                                             {overview.clusters.map((_, i) => (
                                                 // eslint-disable-next-line @typescript-eslint/no-deprecated
-                                                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                                                (<Cell key={i} fill={COLORS[i % COLORS.length]} />)
                                             ))}
                                         </Bar>
                                     </BarChart>
@@ -105,7 +104,7 @@ function SegmentationPage() {
                                     }}
                                 >
                                     <CardContent className="pt-5">
-                                        <p className="text-sm font-semibold">{c.segment_name.replace(/[^\w\s/]/g, '').trim()}</p>
+                                        <p className="text-sm font-semibold">{c.segment_name.replace(/[^\w\s/]/g, "").trim()}</p>
                                         <p className="mt-1 text-2xl font-bold">{c.count.toLocaleString()}</p>
                                         <p className="text-xs text-muted-foreground">{c.percentage}% of customers</p>
                                     </CardContent>
@@ -115,7 +114,6 @@ function SegmentationPage() {
                     </div>
                 )
             )}
-
             {/* Classify a customer */}
             <Card>
                 <CardHeader>
@@ -177,7 +175,7 @@ function SegmentationPage() {
                                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
                                     {Object.entries(segmentMut.data.rfm_scores).map(([k, v]) => (
                                         <div key={k}>
-                                            <span className="text-muted-foreground">{k.replace(/_/g, ' ')}</span>
+                                            <span className="text-muted-foreground">{k.replace(/_/g, " ")}</span>
                                             <p className="font-mono font-medium">{v.toFixed(2)}</p>
                                         </div>
                                     ))}
@@ -188,5 +186,5 @@ function SegmentationPage() {
                 </CardContent>
             </Card>
         </div>
-    );
+    )
 }

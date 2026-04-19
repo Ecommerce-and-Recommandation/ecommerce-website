@@ -9,15 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProductsProductIdRouteImport } from './routes/products/$productId'
-import { Route as AdminSegmentationRouteImport } from './routes/admin/segmentation'
-import { Route as AdminRecommendationRouteImport } from './routes/admin/recommendation'
-import { Route as AdminPredictionRouteImport } from './routes/admin/prediction'
+import { Route as AdminPromotionsRouteImport } from './routes/admin/promotions'
+import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
+import { Route as AdminModelSegmentationRouteImport } from './routes/admin/model/segmentation'
+import { Route as AdminModelRecommendationRouteImport } from './routes/admin/model/recommendation'
+import { Route as AdminModelPredictionRouteImport } from './routes/admin/model/prediction'
 
+const OrdersRoute = OrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -43,19 +51,30 @@ const ProductsProductIdRoute = ProductsProductIdRouteImport.update({
   path: '/products/$productId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminSegmentationRoute = AdminSegmentationRouteImport.update({
-  id: '/admin/segmentation',
-  path: '/admin/segmentation',
+const AdminPromotionsRoute = AdminPromotionsRouteImport.update({
+  id: '/admin/promotions',
+  path: '/admin/promotions',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRecommendationRoute = AdminRecommendationRouteImport.update({
-  id: '/admin/recommendation',
-  path: '/admin/recommendation',
+const AdminOrdersRoute = AdminOrdersRouteImport.update({
+  id: '/admin/orders',
+  path: '/admin/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminPredictionRoute = AdminPredictionRouteImport.update({
-  id: '/admin/prediction',
-  path: '/admin/prediction',
+const AdminModelSegmentationRoute = AdminModelSegmentationRouteImport.update({
+  id: '/admin/model/segmentation',
+  path: '/admin/model/segmentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminModelRecommendationRoute =
+  AdminModelRecommendationRouteImport.update({
+    id: '/admin/model/recommendation',
+    path: '/admin/model/recommendation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AdminModelPredictionRoute = AdminModelPredictionRouteImport.update({
+  id: '/admin/model/prediction',
+  path: '/admin/model/prediction',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -63,32 +82,41 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
-  '/admin/prediction': typeof AdminPredictionRoute
-  '/admin/recommendation': typeof AdminRecommendationRoute
-  '/admin/segmentation': typeof AdminSegmentationRoute
+  '/orders': typeof OrdersRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/promotions': typeof AdminPromotionsRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/model/prediction': typeof AdminModelPredictionRoute
+  '/admin/model/recommendation': typeof AdminModelRecommendationRoute
+  '/admin/model/segmentation': typeof AdminModelSegmentationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
-  '/admin/prediction': typeof AdminPredictionRoute
-  '/admin/recommendation': typeof AdminRecommendationRoute
-  '/admin/segmentation': typeof AdminSegmentationRoute
+  '/orders': typeof OrdersRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/promotions': typeof AdminPromotionsRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/model/prediction': typeof AdminModelPredictionRoute
+  '/admin/model/recommendation': typeof AdminModelRecommendationRoute
+  '/admin/model/segmentation': typeof AdminModelSegmentationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
   '/login': typeof LoginRoute
-  '/admin/prediction': typeof AdminPredictionRoute
-  '/admin/recommendation': typeof AdminRecommendationRoute
-  '/admin/segmentation': typeof AdminSegmentationRoute
+  '/orders': typeof OrdersRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/promotions': typeof AdminPromotionsRoute
   '/products/$productId': typeof ProductsProductIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/model/prediction': typeof AdminModelPredictionRoute
+  '/admin/model/recommendation': typeof AdminModelRecommendationRoute
+  '/admin/model/segmentation': typeof AdminModelSegmentationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,46 +124,65 @@ export interface FileRouteTypes {
     | '/'
     | '/cart'
     | '/login'
-    | '/admin/prediction'
-    | '/admin/recommendation'
-    | '/admin/segmentation'
+    | '/orders'
+    | '/admin/orders'
+    | '/admin/promotions'
     | '/products/$productId'
     | '/admin/'
+    | '/admin/model/prediction'
+    | '/admin/model/recommendation'
+    | '/admin/model/segmentation'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/cart'
     | '/login'
-    | '/admin/prediction'
-    | '/admin/recommendation'
-    | '/admin/segmentation'
+    | '/orders'
+    | '/admin/orders'
+    | '/admin/promotions'
     | '/products/$productId'
     | '/admin'
+    | '/admin/model/prediction'
+    | '/admin/model/recommendation'
+    | '/admin/model/segmentation'
   id:
     | '__root__'
     | '/'
     | '/cart'
     | '/login'
-    | '/admin/prediction'
-    | '/admin/recommendation'
-    | '/admin/segmentation'
+    | '/orders'
+    | '/admin/orders'
+    | '/admin/promotions'
     | '/products/$productId'
     | '/admin/'
+    | '/admin/model/prediction'
+    | '/admin/model/recommendation'
+    | '/admin/model/segmentation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CartRoute: typeof CartRoute
   LoginRoute: typeof LoginRoute
-  AdminPredictionRoute: typeof AdminPredictionRoute
-  AdminRecommendationRoute: typeof AdminRecommendationRoute
-  AdminSegmentationRoute: typeof AdminSegmentationRoute
+  OrdersRoute: typeof OrdersRoute
+  AdminOrdersRoute: typeof AdminOrdersRoute
+  AdminPromotionsRoute: typeof AdminPromotionsRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminModelPredictionRoute: typeof AdminModelPredictionRoute
+  AdminModelRecommendationRoute: typeof AdminModelRecommendationRoute
+  AdminModelSegmentationRoute: typeof AdminModelSegmentationRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/orders': {
+      id: '/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof OrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -171,25 +218,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/segmentation': {
-      id: '/admin/segmentation'
-      path: '/admin/segmentation'
-      fullPath: '/admin/segmentation'
-      preLoaderRoute: typeof AdminSegmentationRouteImport
+    '/admin/promotions': {
+      id: '/admin/promotions'
+      path: '/admin/promotions'
+      fullPath: '/admin/promotions'
+      preLoaderRoute: typeof AdminPromotionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/recommendation': {
-      id: '/admin/recommendation'
-      path: '/admin/recommendation'
-      fullPath: '/admin/recommendation'
-      preLoaderRoute: typeof AdminRecommendationRouteImport
+    '/admin/orders': {
+      id: '/admin/orders'
+      path: '/admin/orders'
+      fullPath: '/admin/orders'
+      preLoaderRoute: typeof AdminOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/prediction': {
-      id: '/admin/prediction'
-      path: '/admin/prediction'
-      fullPath: '/admin/prediction'
-      preLoaderRoute: typeof AdminPredictionRouteImport
+    '/admin/model/segmentation': {
+      id: '/admin/model/segmentation'
+      path: '/admin/model/segmentation'
+      fullPath: '/admin/model/segmentation'
+      preLoaderRoute: typeof AdminModelSegmentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/model/recommendation': {
+      id: '/admin/model/recommendation'
+      path: '/admin/model/recommendation'
+      fullPath: '/admin/model/recommendation'
+      preLoaderRoute: typeof AdminModelRecommendationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/model/prediction': {
+      id: '/admin/model/prediction'
+      path: '/admin/model/prediction'
+      fullPath: '/admin/model/prediction'
+      preLoaderRoute: typeof AdminModelPredictionRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -199,11 +260,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CartRoute: CartRoute,
   LoginRoute: LoginRoute,
-  AdminPredictionRoute: AdminPredictionRoute,
-  AdminRecommendationRoute: AdminRecommendationRoute,
-  AdminSegmentationRoute: AdminSegmentationRoute,
+  OrdersRoute: OrdersRoute,
+  AdminOrdersRoute: AdminOrdersRoute,
+  AdminPromotionsRoute: AdminPromotionsRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminModelPredictionRoute: AdminModelPredictionRoute,
+  AdminModelRecommendationRoute: AdminModelRecommendationRoute,
+  AdminModelSegmentationRoute: AdminModelSegmentationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

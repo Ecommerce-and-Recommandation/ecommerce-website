@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useRecommendations } from '@/lib/hooks';
 import { Loader2, Package, Search } from 'lucide-react';
 
-export const Route = createFileRoute('/admin/recommendation')({
+export const Route = createFileRoute('/admin/model/recommendation')({
     component: RecommendationPage,
 });
 
@@ -87,7 +87,7 @@ function RecommendationPage() {
             {isError && (
                 <Card className="border-destructive/30 bg-destructive/5">
                     <CardContent className="pt-6 text-sm text-destructive">
-                        {error.message.includes('404') ? `Sản phẩm "${activeCode}" không tìm thấy trong database.` : `Lỗi: ${error.message}`}
+                        {error.message.includes('404') ? `Sản phẩm '${activeCode}' không tìm thấy trong database.` : `Lỗi: ${error.message}`}
                     </CardContent>
                 </Card>
             )}

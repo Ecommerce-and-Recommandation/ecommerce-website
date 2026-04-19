@@ -7,7 +7,7 @@ import { usePredictPurchase } from '@/lib/hooks';
 import type { CustomerFeatures } from '@/lib/api';
 import { Brain, Loader2, PartyPopper, ShieldAlert } from 'lucide-react';
 
-export const Route = createFileRoute('/admin/prediction')({
+export const Route = createFileRoute('/admin/model/prediction')({
     component: PredictionPage,
 });
 
@@ -120,7 +120,7 @@ function PredictionPage() {
                                             <ShieldAlert className="h-8 w-8 text-red-500" />
                                         )}
                                         <div>
-                                            <p className="text-lg font-bold">{result.will_purchase ? 'Sẽ mua lại ✅' : 'Không mua lại ❌'}</p>
+                                            <p className="text-lg font-bold">{result.will_purchase ? "Sẽ mua lại ✅" : "Không mua lại ❌"}</p>
                                             <p className="text-sm text-muted-foreground">Xác suất: {(result.probability * 100).toFixed(1)}%</p>
                                         </div>
                                     </div>
@@ -129,7 +129,7 @@ function PredictionPage() {
                                     <div className="mt-4">
                                         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                                             <div
-                                                className={`h-full rounded-full transition-all ${result.probability >= 0.7 ? 'bg-emerald-500' : result.probability >= 0.5 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                className={`h-full rounded-full transition-all ${result.probability >= 0.7 ? `bg-emerald-500` : result.probability >= 0.5 ? `bg-yellow-500` : `bg-red-500`}`}
                                                 style={{
                                                     width: `${String(result.probability * 100)}%`,
                                                 }}

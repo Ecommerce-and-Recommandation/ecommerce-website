@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useProduct, useAddToCart, useShopRecommendations, useProducts } from '@/lib/hooks';
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, ShoppingCart, ArrowLeft, CheckCircle, Sparkles, Tag } from 'lucide-react';
+import { Loader2, ShoppingCart, ArrowLeft, CheckCircle, Sparkles, Tag, Plus, Minus } from 'lucide-react';
 import { tracker } from '@/lib/tracker';
 import type { ShopRecommendation } from '@/lib/api';
 
@@ -11,6 +11,10 @@ function ProductDetailPage() {
     const { data: product, isLoading } = useProduct(id);
     const addToCart = useAddToCart();
     const viewStart = useRef(Date.now());
+    const [quantity, setQuantity] = useState(1);
+
+    // Provide brief success feedback then allow adding again
+    const [justAdded, setJustAdded] = useState(false);
 
     // Same-category products
     const { data: categoryProducts } = useProducts({
@@ -48,9 +52,13 @@ function ProductDetailPage() {
     }, [id]);
 
     function handleAddToCart() {
-        if (!product) return;
-        addToCart.mutate({ productId: product.id });
+        if (!product || quantity < 1) return;
+        addToCart.mutate({ productId: product.id, quantity });
         tracker.trackAddToCart(product.id);
+
+        // Visual feedback
+        setJustAdded(true);
+        setTimeout(() => setJustAdded(false), 2000);
     }
 
     if (isLoading) {
@@ -96,20 +104,42 @@ function ProductDetailPage() {
                         <span className="text-sm text-muted-foreground">{product.purchase_count} sold</span>
                     </div>
 
-                    <button
-                        onClick={handleAddToCart}
-                        disabled={addToCart.isPending || addToCart.isSuccess}
-                        className="flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-4 text-lg font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 disabled:opacity-70"
-                    >
-                        {addToCart.isPending ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : addToCart.isSuccess ? (
-                            <CheckCircle className="h-5 w-5" />
-                        ) : (
-                            <ShoppingCart className="h-5 w-5" />
-                        )}
-                        {addToCart.isSuccess ? 'Added to Cart!' : 'Add to Cart'}
-                    </button>
+                    <div className="flex items-center gap-4 pt-4">
+                        {/* Quantity Selector */}
+                        <div className="flex items-center gap-3 rounded-xl border bg-background px-3 py-2">
+                            <button
+                                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                                disabled={quantity <= 1 || addToCart.isPending}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-50"
+                            >
+                                <Minus className="h-4 w-4" />
+                            </button>
+                            <span className="w-8 text-center text-lg font-medium">{quantity}</span>
+                            <button
+                                onClick={() => setQuantity((q) => q + 1)}
+                                disabled={addToCart.isPending}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-50"
+                            >
+                                <Plus className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        {/* Add to Cart Button */}
+                        <button
+                            onClick={handleAddToCart}
+                            disabled={addToCart.isPending || justAdded}
+                            className="flex-1 flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-4 text-lg font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 disabled:opacity-70"
+                        >
+                            {addToCart.isPending ? (
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : justAdded ? (
+                                <CheckCircle className="h-5 w-5" />
+                            ) : (
+                                <ShoppingCart className="h-5 w-5" />
+                            )}
+                            {justAdded ? 'Added to Cart!' : 'Add to Cart'}
+                        </button>
+                    </div>
                 </div>
             </div>
 

@@ -1,12 +1,12 @@
 import { Link, Outlet, createRootRoute, useNavigate, useRouterState } from '@tanstack/react-router';
-import { ShoppingBag, ShoppingCart, Search, BarChart3, Brain, Package, Users, LogOut, Settings } from 'lucide-react';
+import { ShoppingBag, ShoppingCart, Search, BarChart3, Brain, Package, Users, LogOut, Settings, Ticket, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/hooks';
 import { useState } from 'react';
 import { tracker } from '@/lib/tracker';
 
 function RootLayout() {
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn, user, logout } = useAuth();
     const routerState = useRouterState();
     const pathname = routerState.location.pathname;
     const isLoginPage = pathname === '/login';
@@ -14,7 +14,23 @@ function RootLayout() {
 
     if (isLoginPage) return <Outlet />;
     if (!isLoggedIn) return <LoginRedirect />;
-    if (isAdmin) return <AdminLayout />;
+
+    // Protect Admin Routes
+    if (isAdmin) {
+        if (user && !user.is_admin) {
+            return (
+                <div className="p-10 flex flex-col items-center">
+                    <h1 className="text-2xl font-bold text-red-500">Access Denied</h1>
+                    <p>You do not have administrator permissions.</p>
+                    <Link to="/" className="text-emerald-500 mt-4 underline">
+                        Go home
+                    </Link>
+                </div>
+            );
+        }
+        return <AdminLayout />;
+    }
+
     return <ShopLayout />;
 }
 
@@ -67,6 +83,14 @@ function ShopLayout() {
 
                     <div className="flex items-center gap-3">
                         <Link
+                            to="/orders"
+                            className="relative flex h-10 w-10 items-center justify-center rounded-xl border transition-colors hover:border-emerald-500 hover:bg-emerald-500/10"
+                            title="My Orders"
+                        >
+                            <Package className="h-5 w-5" />
+                        </Link>
+
+                        <Link
                             to="/cart"
                             className="relative flex h-10 w-10 items-center justify-center rounded-xl border transition-colors hover:border-emerald-500 hover:bg-emerald-500/10"
                         >
@@ -117,18 +141,38 @@ function AdminLayout() {
                 </div>
 
                 <nav className="flex flex-1 flex-col gap-1 p-3">
-                    <NavLink to="/" icon={<ShoppingBag className="h-4 w-4" />}>← Back to Shop</NavLink>
+                    <NavLink to="/" icon={<ShoppingBag className="h-4 w-4" />}>
+                        ← Back to Shop
+                    </NavLink>
                     <div className="my-2 border-b" />
-                    <NavLink to="/admin" icon={<BarChart3 className="h-4 w-4" />}>Dashboard</NavLink>
-                    <NavLink to="/admin/prediction" icon={<Brain className="h-4 w-4" />}>Purchase Prediction</NavLink>
-                    <NavLink to="/admin/recommendation" icon={<Package className="h-4 w-4" />}>Recommendations</NavLink>
-                    <NavLink to="/admin/segmentation" icon={<Users className="h-4 w-4" />}>Segmentation</NavLink>
+                    <NavLink to="/admin" icon={<BarChart3 className="h-4 w-4" />}>
+                        Dashboard
+                    </NavLink>
+                    <NavLink to="/admin/orders" icon={<Package className="h-4 w-4" />}>
+                        Manage Orders
+                    </NavLink>
+                    <NavLink to="/admin/promotions" icon={<Ticket className="h-4 w-4" />}>
+                        Promotions
+                    </NavLink>
+                    <div className="my-2 border-b" />
+                    <p className="px-3 text-xs font-semibold uppercase text-muted-foreground mb-1">Testing Lab</p>
+                    <NavLink to="/admin/model/prediction" icon={<Brain className="h-4 w-4" />}>
+                        Purchase Prediction
+                    </NavLink>
+                    <NavLink to="/admin/model/recommendation" icon={<Sparkles className="h-4 w-4" />}>
+                        Recommendations
+                    </NavLink>
+                    <NavLink to="/admin/model/segmentation" icon={<Users className="h-4 w-4" />}>
+                        Segmentation
+                    </NavLink>
                 </nav>
 
                 <div className="border-t px-4 py-3">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{user?.name}</span>
-                        <button onClick={logout} className="hover:text-red-400"><LogOut className="h-3.5 w-3.5" /></button>
+                        <button onClick={logout} className="hover:text-red-400">
+                            <LogOut className="h-3.5 w-3.5" />
+                        </button>
                     </div>
                 </div>
             </aside>

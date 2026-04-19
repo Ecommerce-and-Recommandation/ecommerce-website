@@ -3,7 +3,9 @@ import { useState, useMemo, useEffect } from 'react';
 import { useCart, useRemoveFromCart, useUpdateCartItem } from '@/lib/hooks';
 import { Loader2, Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Check } from 'lucide-react';
 import { tracker } from '@/lib/tracker';
-import type { CartItemData } from '@/lib/api';
+import { adminPromotionsApi, shopApi, type CartItemData, type PromotionData } from '@/lib/api';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function CartPage() {
     const { data: cart, isLoading } = useCart();
@@ -13,12 +15,63 @@ function CartPage() {
     // Selection State
     const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(new Set());
 
-    // Auto-select all on first load
-    useEffect(() => {
-        if (cart?.items && selectedItemIds.size === 0) {
-            setSelectedItemIds(new Set(cart.items.map((i) => i.id)));
+    // Promo State
+    const [discountData, setDiscountData] = useState<{ valid: boolean; message: string; amount: number; id: number | null }>({
+        valid: false,
+        message: '',
+        amount: 0,
+        id: null,
+    });
+
+    // Checkout State
+    const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
+    const [checkoutMessage, setCheckoutMessage] = useState('');
+    const queryClient = useQueryClient();
+
+    // Dynamically calculate totals for selected items
+    const { selectedTotal, selectedCount } = useMemo(() => {
+        let total = 0;
+        let count = 0;
+        if (cart?.items) {
+            for (const item of cart.items) {
+                if (selectedItemIds.has(item.id)) {
+                    total += item.product_price * item.quantity;
+                    count += item.quantity;
+                }
+            }
         }
-    }, [cart?.items]);
+        return { selectedTotal: total, selectedCount: count };
+    }, [cart?.items, selectedItemIds]);
+
+    // Fetch dynamic available promos based on total
+    const { data: availablePromos } = useQuery({
+        queryKey: ['available-promos', selectedTotal],
+        queryFn: () => adminPromotionsApi.getAvailablePromotions(selectedTotal),
+        enabled: selectedTotal > 0,
+    });
+
+    // Reset or recalculate applied promo
+    useEffect(() => {
+        if (discountData.valid && discountData.id !== null && availablePromos) {
+            const isValid = availablePromos.find((p) => p.id === discountData.id);
+            if (!isValid) {
+                setDiscountData({ valid: false, message: 'Applied promotion is no longer valid for this cart total.', amount: 0, id: null });
+            } else {
+                const newAmount = isValid.discount_type === 'PERCENTAGE' 
+                    ? (selectedTotal * isValid.discount_value) / 100 
+                    : isValid.discount_value;
+                setDiscountData(prev => ({ ...prev, amount: newAmount }));
+            }
+        }
+    }, [availablePromos, discountData.valid, discountData.id, selectedTotal]);
+
+    // Auto-select all on first load
+    // useEffect(() => {
+    //     if (cart?.items && selectedItemIds.size === 0) {
+    //         setSelectedItemIds(new Set(cart.items.map((i) => i.id)));
+    //     }
+    // }, [cart?.items]);
 
     function handleRemove(item: CartItemData) {
         removeItem.mutate(item.id);
@@ -53,21 +106,6 @@ function CartPage() {
         return b.localeCompare(a);
     });
 
-    // Calculate totals for selected items only
-    const { selectedTotal, selectedCount } = useMemo(() => {
-        let total = 0;
-        let count = 0;
-        if (cart?.items) {
-            for (const item of cart.items) {
-                if (selectedItemIds.has(item.id)) {
-                    total += item.product_price * item.quantity;
-                    count += item.quantity;
-                }
-            }
-        }
-        return { selectedTotal: total, selectedCount: count };
-    }, [cart?.items, selectedItemIds]);
-
     function toggleSelection(itemId: number) {
         const next = new Set(selectedItemIds);
         if (next.has(itemId)) next.delete(itemId);
@@ -86,6 +124,43 @@ function CartPage() {
             else next.add(id);
         }
         setSelectedItemIds(next);
+    }
+
+    async function handlePromoSelect(promoIdStr: string) {
+        if (promoIdStr === 'none') {
+            setDiscountData({ valid: false, message: '', amount: 0, id: null });
+            return;
+        }
+
+        const promoId = parseInt(promoIdStr);
+        const selectedPromo = availablePromos?.find((p) => p.id === promoId);
+
+        if (!selectedPromo) return;
+
+        // Calculate offline since we already have the rules
+        const discountAmount =
+            selectedPromo.discount_type === 'PERCENTAGE' ? (selectedTotal * selectedPromo.discount_value) / 100 : selectedPromo.discount_value;
+
+        setDiscountData({
+            valid: true,
+            message: 'Promotion applied!',
+            amount: discountAmount,
+            id: promoId,
+        });
+    }
+
+    async function handleConfirmCheckout() {
+        setIsCheckingOut(true);
+        try {
+            const res = await shopApi.checkout(Array.from(selectedItemIds), discountData.id || undefined);
+            setCheckoutMessage(res.message);
+            // Invalidate cart to show it empty now
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
+        } catch (error: any) {
+            setCheckoutMessage('Checkout failed. Please try again.');
+        } finally {
+            setIsCheckingOut(false);
+        }
     }
 
     function formatDate(dateStr: string) {
@@ -150,7 +225,10 @@ function CartPage() {
                                     {items.map((item) => {
                                         const isSelected = selectedItemIds.has(item.id);
                                         return (
-                                            <div key={item.id} className="flex gap-4 rounded-xl border bg-card p-4 shadow-sm transition-all hover:shadow-md">
+                                            <div
+                                                key={item.id}
+                                                className="flex gap-4 rounded-xl border bg-card p-4 shadow-sm transition-all hover:shadow-md"
+                                            >
                                                 {/* Checkbox */}
                                                 <div className="flex items-center">
                                                     <button
@@ -162,7 +240,11 @@ function CartPage() {
                                                 </div>
 
                                                 <Link to="/products/$productId" params={{ productId: String(item.product_id) }}>
-                                                    <img src={item.product_image} alt={item.product_name} className="h-24 w-24 rounded-lg object-cover" />
+                                                    <img
+                                                        src={item.product_image}
+                                                        alt={item.product_name}
+                                                        className="h-24 w-24 rounded-lg object-cover"
+                                                    />
                                                 </Link>
 
                                                 <div className="flex flex-1 flex-col justify-between">
@@ -195,7 +277,9 @@ function CartPage() {
                                                         </div>
 
                                                         <div className="flex items-center gap-4">
-                                                            <span className="font-bold text-emerald-600">£{(item.product_price * item.quantity).toFixed(2)}</span>
+                                                            <span className="font-bold text-emerald-600">
+                                                                £{(item.product_price * item.quantity).toFixed(2)}
+                                                            </span>
                                                             <button
                                                                 onClick={() => handleRemove(item)}
                                                                 className="text-muted-foreground transition-colors hover:text-red-500"
@@ -226,14 +310,52 @@ function CartPage() {
                             <span>Shipping</span>
                             <span className="text-emerald-600">Free</span>
                         </div>
+
+                        {discountData.valid && (
+                            <div className="flex justify-between text-sm text-emerald-600">
+                                <span>{availablePromos?.find((p) => p.id === discountData.id)?.code || 'Discount'}</span>
+                                <span>-£{discountData.amount.toFixed(2)}</span>
+                            </div>
+                        )}
+
                         <div className="border-t pt-3">
                             <div className="flex justify-between text-lg font-bold">
                                 <span>Total</span>
-                                <span className="text-emerald-600">£{selectedTotal.toFixed(2)}</span>
+                                <span className="text-emerald-600">£{Math.max(0, selectedTotal - discountData.amount).toFixed(2)}</span>
                             </div>
                         </div>
                     </div>
-                    <button 
+
+                    <div className="mt-4">
+                        <Select
+                            value={discountData.id ? String(discountData.id) : 'none'}
+                            onValueChange={handlePromoSelect}
+                            disabled={selectedCount === 0 || !availablePromos?.length}
+                        >
+                            <SelectTrigger className="w-full bg-muted/30">
+                                <SelectValue placeholder={availablePromos?.length ? 'Select a Promotion' : 'No promotions applied'} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">No promotion</SelectItem>
+                                {availablePromos?.map((promo) => (
+                                    <SelectItem key={promo.id} value={String(promo.id)}>
+                                        <div className="flex justify-between items-center w-full gap-4">
+                                            <span className="font-medium">{promo.code}</span>
+                                            <span className="text-xs text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">
+                                                {promo.discount_type === 'PERCENTAGE' ? `-${promo.discount_value}%` : `-£${promo.discount_value}`}
+                                            </span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    {discountData.message && discountData.valid === false && (
+                        <p className="mt-2 text-xs font-semibold text-red-500">{discountData.message}</p>
+                    )}
+
+                    <button
+                        onClick={() => setShowCheckoutModal(true)}
                         disabled={selectedCount === 0}
                         className="mt-6 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3.5 font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -241,6 +363,61 @@ function CartPage() {
                     </button>
                 </div>
             </div>
+
+            {/* Checkout Modal */}
+            {showCheckoutModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                    <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-xl animate-in zoom-in-95 duration-200">
+                        {checkoutMessage ? (
+                            <div className="flex flex-col items-center gap-4 text-center">
+                                <div
+                                    className={`flex h-16 w-16 items-center justify-center rounded-full ${checkoutMessage.includes('success') ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}
+                                >
+                                    <Check className="h-8 w-8" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold">Order Status</h2>
+                                    <p className="mt-1 text-muted-foreground">{checkoutMessage}</p>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setShowCheckoutModal(false);
+                                        setCheckoutMessage('');
+                                    }}
+                                    className="mt-4 w-full rounded-xl bg-foreground text-background py-3 font-semibold"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <h2 className="text-xl font-bold mb-4">Confirm Checkout</h2>
+                                <p className="text-muted-foreground mb-6">
+                                    You are about to place an order for {selectedCount} items totaling{' '}
+                                    <span className="font-bold text-foreground">£{Math.max(0, selectedTotal - discountData.amount).toFixed(2)}</span>.
+                                    This action cannot be undone. Are you sure you want to proceed?
+                                </p>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowCheckoutModal(false)}
+                                        disabled={isCheckingOut}
+                                        className="flex-1 rounded-xl border py-3 font-semibold hover:bg-muted"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleConfirmCheckout}
+                                        disabled={isCheckingOut}
+                                        className="flex-1 rounded-xl bg-emerald-500 py-3 font-semibold text-white hover:bg-emerald-600 flex justify-center items-center gap-2"
+                                    >
+                                        {isCheckingOut ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirm Order'}
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -248,4 +425,3 @@ function CartPage() {
 export const Route = createFileRoute('/cart')({
     component: CartPage,
 });
-

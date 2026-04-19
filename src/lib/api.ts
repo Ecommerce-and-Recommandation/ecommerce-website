@@ -208,4 +208,89 @@ export const shopApi = {
             .then((r) => r.data),
 
     behaviorProfile: () => api.get<BehaviorProfileResponse>('/behavior/profile').then((r) => r.data),
+
+    checkout: (selected_item_ids: number[], promotion_id?: number) =>
+        api
+            .post<{ order_id: number; total_paid: number; message: string }>('/cart/checkout', {
+                selected_item_ids,
+                promotion_id,
+            })
+            .then((r) => r.data),
+};
+
+// ── Admin Promotions API ──────────────────────────────────────
+
+export interface PromotionData {
+    id: number;
+    code: string;
+    discount_type: string;
+    discount_value: number;
+    min_order_amount: number;
+    usage_limit: number | null;
+    times_used: number;
+    is_active: boolean;
+    created_at: string;
+    valid_until: string | null;
+}
+
+export interface PromoSuggestion {
+    product_id: number;
+    product_name: string;
+    image_url: string;
+    reason: string;
+    suggested_action: string;
+    suggested_promo: {
+        code: string;
+        discount_type: string;
+        discount_value: number;
+        message: string;
+    };
+}
+
+export const adminPromotionsApi = {
+    getPromotions: () => api.get<PromotionData[]>('/promotions').then((r) => r.data),
+
+    getAvailablePromotions: (cart_total: number) =>
+        api.get<PromotionData[]>('/promotions/available', { params: { cart_total } }).then((r) => r.data),
+
+    createPromotion: (data: Partial<PromotionData>) => api.post<PromotionData>('/promotions', data).then((r) => r.data),
+
+    deletePromotion: (id: number) => api.delete(`/promotions/${id}`).then((r) => r.data),
+
+    getSuggestions: () => api.get<PromoSuggestion[]>('/promotions/insights/suggestions').then((r) => r.data),
+
+    applyPromotion: (code: string, cart_total: number) =>
+        api
+            .post<{
+                valid: boolean;
+                message: string;
+                discount_amount: number;
+                promotion_id: number | null;
+            }>('/promotions/apply', { code, cart_total })
+            .then((r) => r.data),
+};
+
+export interface OrderItemData {
+    id: number;
+    product_id: number;
+    quantity: number;
+    price_at_time: number;
+    product_name: string;
+    product_image: string;
+}
+
+export interface OrderData {
+    id: number;
+    user_id: number;
+    total_amount: number;
+    discount_amount: number;
+    status: string;
+    created_at: string;
+    items: OrderItemData[];
+}
+
+export const ordersApi = {
+    getMyOrders: () => api.get<OrderData[]>('/orders/me').then((r) => r.data),
+    getAdminOrders: () => api.get<OrderData[]>('/admin/orders').then((r) => r.data),
+    updateOrderStatus: (id: number, status: string) => api.put(`/admin/orders/${id}/status`, { status }).then((r) => r.data),
 };
