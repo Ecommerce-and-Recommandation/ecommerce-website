@@ -6,6 +6,8 @@ import { queryClient } from './lib/queryClient';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { routeTree } from './routeTree.gen';
 
+import { UserProvider } from './contexts/UserContext';
+
 const router = createRouter({ routeTree });
 
 declare module '@tanstack/react-router' {
@@ -22,7 +24,9 @@ if (!rootElement) {
 createRoot(rootElement).render(
     <StrictMode>
         <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
+            <UserProvider>
+                <RouterProvider router={router} />
+            </UserProvider>
         </QueryClientProvider>
     </StrictMode>,
 );
