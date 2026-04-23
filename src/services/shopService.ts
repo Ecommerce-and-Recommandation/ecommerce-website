@@ -29,11 +29,13 @@ export const shopService = {
 
     behaviorProfile: () => apiClient.get<BehaviorProfileResponse>('/behavior/profile').then((r) => r.data),
 
-    checkout: (selected_item_ids: number[], promotion_id?: number) =>
-        apiClient
-            .post<{ order_id: number; total_paid: number; message: string }>('/cart/checkout', {
-                selected_item_ids,
-                promotion_id,
-            })
-            .then((r) => r.data),
+    checkout: async (selected_item_ids: number[], promotion_id?: number, shipping_address?: string, phone?: string) => {
+        const res = await apiClient.post<{ message: string; order_id: number; total_paid: number }>('/cart/checkout', {
+            selected_item_ids,
+            promotion_id,
+            shipping_address,
+            phone,
+        });
+        return res.data;
+    },
 };

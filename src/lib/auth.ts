@@ -11,6 +11,8 @@ interface AuthUser {
     email: string;
     name: string;
     country: string;
+    phone?: string;
+    address?: string;
     is_admin: boolean;
 }
 
@@ -60,6 +62,18 @@ export const auth = {
         const res = await api.post<{ access_token: string; user: AuthUser }>('/auth/login', {
             email,
             password,
+        });
+        persist({ token: res.data.access_token, user: res.data.user });
+        return res.data;
+    },
+
+    register: async (email: string, password: string, name: string, phone: string, address: string) => {
+        const res = await api.post<{ access_token: string; user: AuthUser }>('/auth/register', {
+            email,
+            password,
+            name,
+            phone,
+            address,
         });
         persist({ token: res.data.access_token, user: res.data.user });
         return res.data;

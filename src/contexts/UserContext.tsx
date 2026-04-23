@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, use, type ReactNode } from 'react';
 import { useAuth } from '@/lib/auth';
 
 interface UserContextType {
@@ -14,15 +14,11 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
     const auth = useAuth();
 
-    return (
-        <UserContext.Provider value={auth}>
-            {children}
-        </UserContext.Provider>
-    );
+    return <UserContext value={auth}>{children}</UserContext>;
 }
 
 export function useUser() {
-    const context = useContext(UserContext);
+    const context = use(UserContext);
     if (context === undefined) {
         throw new Error('useUser must be used within a UserProvider');
     }

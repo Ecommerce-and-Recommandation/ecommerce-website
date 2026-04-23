@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -21,6 +23,11 @@ import { Route as AdminModelSegmentationRouteImport } from './routes/admin/model
 import { Route as AdminModelRecommendationRouteImport } from './routes/admin/model/recommendation'
 import { Route as AdminModelPredictionRouteImport } from './routes/admin/model/prediction'
 
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrdersRoute = OrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -29,6 +36,11 @@ const OrdersRoute = OrdersRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CartRoute = CartRouteImport.update({
@@ -81,8 +93,10 @@ const AdminModelPredictionRoute = AdminModelPredictionRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/login': typeof LoginRoute
   '/orders': typeof OrdersRoute
+  '/profile': typeof ProfileRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -94,8 +108,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/login': typeof LoginRoute
   '/orders': typeof OrdersRoute
+  '/profile': typeof ProfileRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -108,8 +124,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/login': typeof LoginRoute
   '/orders': typeof OrdersRoute
+  '/profile': typeof ProfileRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/products/$productId': typeof ProductsProductIdRoute
@@ -123,8 +141,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/cart'
+    | '/checkout'
     | '/login'
     | '/orders'
+    | '/profile'
     | '/admin/orders'
     | '/admin/promotions'
     | '/products/$productId'
@@ -136,8 +156,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/cart'
+    | '/checkout'
     | '/login'
     | '/orders'
+    | '/profile'
     | '/admin/orders'
     | '/admin/promotions'
     | '/products/$productId'
@@ -149,8 +171,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/cart'
+    | '/checkout'
     | '/login'
     | '/orders'
+    | '/profile'
     | '/admin/orders'
     | '/admin/promotions'
     | '/products/$productId'
@@ -163,8 +187,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CartRoute: typeof CartRoute
+  CheckoutRoute: typeof CheckoutRoute
   LoginRoute: typeof LoginRoute
   OrdersRoute: typeof OrdersRoute
+  ProfileRoute: typeof ProfileRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminPromotionsRoute: typeof AdminPromotionsRoute
   ProductsProductIdRoute: typeof ProductsProductIdRoute
@@ -176,6 +202,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/orders': {
       id: '/orders'
       path: '/orders'
@@ -188,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cart': {
@@ -259,8 +299,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CartRoute: CartRoute,
+  CheckoutRoute: CheckoutRoute,
   LoginRoute: LoginRoute,
   OrdersRoute: OrdersRoute,
+  ProfileRoute: ProfileRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminPromotionsRoute: AdminPromotionsRoute,
   ProductsProductIdRoute: ProductsProductIdRoute,

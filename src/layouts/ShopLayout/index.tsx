@@ -83,7 +83,9 @@ export function ShopLayout() {
                         </RoleGuard>
 
                         <div className="flex items-center h-10 gap-2 rounded-xl border px-3">
-                            <span className="text-xs font-medium text-muted-foreground">{user?.name}</span>
+                            <Link to="/profile" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
+                                {user?.name}
+                            </Link>
                             <Separator orientation="vertical" className="h-4 mx-1" />
                             <Button
                                 variant="ghost"

@@ -35,7 +35,7 @@ function AdminPromotionsPage() {
             </div>
 
             {/* AI Insights Widget */}
-            <Card className="border-none shadow-lg bg-gradient-to-br from-primary/5 to-primary/10">
+            <Card className="border-none shadow-lg bg-linear-to-br from-primary/5 to-primary/10">
                 <CardHeader>
                     <div className="flex items-center gap-2">
                         <Sparkles className="h-5 w-5 text-primary" />

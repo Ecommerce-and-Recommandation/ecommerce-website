@@ -1,14 +1,12 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState, useMemo, useEffect } from 'react';
 import { useCart, useRemoveFromCart, useUpdateCartItem } from '@/hooks/useCart';
 import { useAvailablePromotions } from '@/hooks/usePromotions';
 import { Loader2, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { tracker } from '@/lib/tracker';
-import { shopService } from '@/services/shopService';
 import { useQueryClient } from '@tanstack/react-query';
 import { CartGroup } from '@/components/cart/cartGroup';
 import { OrderSummary } from '@/components/cart/orderSummary';
-import { CheckoutDialog } from '@/components/cart/checkoutDialog';
 import type { CartItemData } from '@/types/cartTypes';
 
 function CartPage() {
@@ -24,9 +22,7 @@ function CartPage() {
         id: null,
     });
 
-    const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-    const [isCheckingOut, setIsCheckingOut] = useState(false);
-    const [checkoutMessage, setCheckoutMessage] = useState('');
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
 
     const { selectedTotal, selectedCount } = useMemo(() => {
@@ -78,17 +74,14 @@ function CartPage() {
         [groupedItems],
     );
 
-    const handleConfirmCheckout = async () => {
-        setIsCheckingOut(true);
-        try {
-            const res = await shopService.checkout(Array.from(selectedItemIds), discountData.id ?? undefined);
-            setCheckoutMessage(res.message);
-            void queryClient.invalidateQueries({ queryKey: ['cart'] });
-        } catch (error) {
-            setCheckoutMessage(error instanceof Error ? error.message : 'Checkout failed.');
-        } finally {
-            setIsCheckingOut(false);
-        }
+    const handleProceedToCheckout = () => {
+        void navigate({
+            to: '/checkout',
+            search: {
+                items: Array.from(selectedItemIds).join(','),
+                promo: discountData.id ? discountData.id.toString() : undefined,
+            }
+        });
     };
 
     if (isLoading)
@@ -176,25 +169,9 @@ function CartPage() {
                         const amount = promo.discount_type === 'PERCENTAGE' ? (selectedTotal * promo.discount_value) / 100 : promo.discount_value;
                         setDiscountData({ valid: true, message: 'Applied!', amount, id: promo.id });
                     }}
-                    onCheckout={() => {
-                        setShowCheckoutModal(true);
-                    }}
+                    onCheckout={handleProceedToCheckout}
                 />
             </div>
-
-            <CheckoutDialog
-                isOpen={showCheckoutModal}
-                onOpenChange={setShowCheckoutModal}
-                checkoutMessage={checkoutMessage}
-                onCloseMessage={() => {
-                    setShowCheckoutModal(false);
-                    setCheckoutMessage('');
-                }}
-                selectedCount={selectedCount}
-                finalPrice={Math.max(0, selectedTotal - discountData.amount)}
-                isCheckingOut={isCheckingOut}
-                onConfirm={() => void handleConfirmCheckout()}
-            />
         </div>
     );
 }
