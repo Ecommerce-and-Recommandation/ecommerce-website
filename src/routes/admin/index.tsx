@@ -8,6 +8,33 @@ function AdminDashboard() {
     const { data: modelInfo } = useModelInfo();
     const { data: segments } = useSegmentsOverview();
 
+    const stats = [
+        {
+            label: 'API Status',
+            value: health?.models_loaded ? 'Online' : 'Offline',
+            icon: Activity,
+            color: 'text-primary',
+        },
+        {
+            label: 'Models Loaded',
+            value: health?.models.length ?? 0,
+            icon: Brain,
+            color: 'text-primary/80',
+        },
+        {
+            label: 'Total Products',
+            value: modelInfo?.knn.total_products ?? '—',
+            icon: Package,
+            color: 'text-primary/60',
+        },
+        {
+            label: 'Customer Segments',
+            value: segments?.n_clusters ?? '—',
+            icon: Users,
+            color: 'text-primary/40',
+        },
+    ];
+
     return (
         <div className="space-y-8">
             <div>
@@ -17,42 +44,17 @@ function AdminDashboard() {
 
             {/* Status Cards */}
             <div className="grid gap-4 md:grid-cols-4">
-                <Card>
-                    <CardContent className="flex items-center gap-3 pt-6">
-                        <Activity className="h-8 w-8 text-primary" />
-                        <div>
-                            <p className="text-sm text-muted-foreground">API Status</p>
-                            <p className="text-lg font-bold">{health?.models_loaded ? 'Online' : 'Offline'}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="flex items-center gap-3 pt-6">
-                        <Brain className="h-8 w-8 text-primary/80" />
-                        <div>
-                            <p className="text-sm text-muted-foreground">Models Loaded</p>
-                            <p className="text-lg font-bold">{health?.models.length ?? 0}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="flex items-center gap-3 pt-6">
-                        <Package className="h-8 w-8 text-primary/60" />
-                        <div>
-                            <p className="text-sm text-muted-foreground">Total Products</p>
-                            <p className="text-lg font-bold">{modelInfo?.knn.total_products ?? '—'}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="flex items-center gap-3 pt-6">
-                        <Users className="h-8 w-8 text-primary/40" />
-                        <div>
-                            <p className="text-sm text-muted-foreground">Customer Segments</p>
-                            <p className="text-lg font-bold">{segments?.n_clusters ?? '—'}</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                {stats.map((stat) => (
+                    <Card key={stat.label}>
+                        <CardContent className="flex items-center gap-3 pt-6">
+                            <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                            <div>
+                                <p className="text-sm text-muted-foreground">{stat.label}</p>
+                                <p className="text-lg font-bold">{stat.value}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
 
             {/* Model Metrics */}
