@@ -65,8 +65,17 @@ export const auth = {
         return res.data;
     },
 
-    logout: () => {
+    logout: async () => {
+        try {
+            await api.post('/auth/logout');
+        } catch (e) {
+            console.error('Logout API failed', e);
+        }
         persist({ token: null, user: null });
+    },
+
+    updateToken: (newToken: string) => {
+        persist({ ...state, token: newToken });
     },
 
     isLoggedIn: () => !!state.token,
