@@ -5,6 +5,7 @@ import { Loader2, PackageSearch, TrendingUp, DollarSign, Package } from 'lucide-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { formatCurrency } from '@/lib/pricing';
 
 function AdminOrdersPage() {
     const { data: orders, isLoading } = useAdminOrders();
@@ -20,13 +21,12 @@ function AdminOrdersPage() {
 
     if (!orders) return null;
 
-    // Quick Stats
     const totalRevenue = orders.reduce((acc, order) => acc + (order.status !== 'CANCELED' ? order.total_amount : 0), 0);
     const totalOrders = orders.length;
     const pendingOrders = orders.filter((o) => o.status === 'PENDING').length;
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="animate-in fade-in space-y-8 duration-500">
             <div>
                 <h1 className="text-3xl font-extrabold tracking-tight">Manage Orders</h1>
                 <p className="mt-2 text-muted-foreground">Monitor sales, approve pending transactions, and track revenue.</p>
@@ -39,7 +39,7 @@ function AdminOrdersPage() {
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">£{totalRevenue.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -69,27 +69,27 @@ function AdminOrdersPage() {
 
                 {orders.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-                        <PackageSearch className="h-12 w-12 mb-4 opacity-50" />
+                        <PackageSearch className="mb-4 h-12 w-12 opacity-50" />
                         <p>No orders completely logged yet.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                                 <tr>
                                     <th className="px-6 py-3 font-medium">Order ID</th>
                                     <th className="px-6 py-3 font-medium">Items</th>
                                     <th className="px-6 py-3 font-medium">Total Price</th>
                                     <th className="px-6 py-3 font-medium">Discount</th>
                                     <th className="px-6 py-3 font-medium">Date</th>
-                                    <th className="px-6 py-3 font-medium right-0">Status</th>
+                                    <th className="right-0 px-6 py-3 font-medium">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y">
                                 {orders.map((order) => (
                                     <tr
                                         key={order.id}
-                                        className="hover:bg-muted/10 transition-colors cursor-pointer"
+                                        className="cursor-pointer transition-colors hover:bg-muted/10"
                                         onClick={() => setSelectedOrder(order)}
                                     >
                                         <td className="px-6 py-4 font-bold uppercase">
@@ -97,25 +97,25 @@ function AdminOrdersPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             {order.items.length} items
-                                            <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                                            <div className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
                                                 {order.items.map((i) => i.product_name).join(', ')}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 font-bold">£{order.total_amount.toFixed(2)}</td>
+                                        <td className="px-6 py-4 font-bold">{formatCurrency(order.total_amount)}</td>
                                         <td className="px-6 py-4">
                                             {order.discount_amount > 0 ? (
                                                 <Badge variant="secondary" className="font-bold">
-                                                    -£{order.discount_amount.toFixed(2)}
+                                                    -{formatCurrency(order.discount_amount)}
                                                 </Badge>
                                             ) : (
-                                                <span className="text-muted-foreground opacity-50">-</span>
+                                                <span className="opacity-50 text-muted-foreground">-</span>
                                             )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
                                             {new Date(order.created_at).toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <Badge variant={order.status === 'COMPLETED' ? 'default' : 'secondary'} className="font-bold text-xs">
+                                            <Badge variant={order.status === 'COMPLETED' ? 'default' : 'secondary'} className="text-xs font-bold">
                                                 {order.status}
                                             </Badge>
                                         </td>
@@ -150,7 +150,7 @@ function AdminOrdersPage() {
                             </div>
 
                             <div>
-                                <h3 className="text-sm font-semibold text-muted-foreground mb-3">Order Items</h3>
+                                <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Order Items</h3>
                                 <div className="rounded-md border">
                                     <table className="w-full text-sm">
                                         <thead className="bg-muted/50 text-muted-foreground">
@@ -168,9 +168,9 @@ function AdminOrdersPage() {
                                                         <div className="font-medium">{item.product_name}</div>
                                                     </td>
                                                     <td className="px-4 py-3 text-center">{item.quantity}</td>
-                                                    <td className="px-4 py-3 text-right">£{item.price_at_time.toFixed(2)}</td>
+                                                    <td className="px-4 py-3 text-right">{formatCurrency(item.price_at_time)}</td>
                                                     <td className="px-4 py-3 text-right font-medium">
-                                                        £{(item.price_at_time * item.quantity).toFixed(2)}
+                                                        {formatCurrency(item.price_at_time * item.quantity)}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -183,15 +183,15 @@ function AdminOrdersPage() {
                                 <div className="w-64 space-y-2">
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Subtotal</span>
-                                        <span>£{(selectedOrder.total_amount + selectedOrder.discount_amount).toFixed(2)}</span>
+                                        <span>{formatCurrency(selectedOrder.total_amount + selectedOrder.discount_amount)}</span>
                                     </div>
                                     <div className="flex justify-between text-destructive">
                                         <span>Discount</span>
-                                        <span>-£{selectedOrder.discount_amount.toFixed(2)}</span>
+                                        <span>-{formatCurrency(selectedOrder.discount_amount)}</span>
                                     </div>
-                                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                                    <div className="flex justify-between border-t pt-2 text-lg font-bold">
                                         <span>Total</span>
-                                        <span>£{selectedOrder.total_amount.toFixed(2)}</span>
+                                        <span>{formatCurrency(selectedOrder.total_amount)}</span>
                                     </div>
                                 </div>
                             </div>

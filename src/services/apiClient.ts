@@ -20,11 +20,9 @@ apiClient.interceptors.response.use(
             try {
                 const res = await axios.post('http://localhost:8000/api/auth/refresh', {}, { withCredentials: true });
                 const { access_token } = res.data;
-                
-                // Update local state
-                const state = auth.getState();
+
                 auth.updateToken(access_token);
-                
+
                 // Retry original request
                 originalRequest.headers.Authorization = `Bearer ${access_token}`;
                 return apiClient(originalRequest);

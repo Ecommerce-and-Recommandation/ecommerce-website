@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import type { ShopProduct } from '@/types/productTypes';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/pricing';
 
 interface ProductCardProps {
     product: ShopProduct;
@@ -27,7 +28,7 @@ export function ProductCard({ product: p }: ProductCardProps) {
                         </Badge>
                     </div>
                     <div className="mt-4 flex items-center justify-between">
-                        <span className="text-base font-bold">£{p.price.toFixed(2)}</span>
+                        <span className="text-base font-bold">{formatCurrency(p.price)}</span>
                         <span className="text-[10px] text-muted-foreground">{p.purchase_count} sold</span>
                     </div>
                 </div>

@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tag, Sparkles, Loader2 } from 'lucide-react';
+import { formatCurrency } from '@/lib/pricing';
 import { tracker } from '@/lib/tracker';
 import type { ShopProduct, BehaviorRecommendationsResponse, ShopRecommendation } from '@/types/productTypes';
 
@@ -24,7 +25,6 @@ export function ProductRecommendations({
 }: ProductRecommendationsProps) {
     return (
         <div className="space-y-12">
-            {/* Same Category */}
             {categoryProducts.length > 0 && (
                 <section className="space-y-4">
                     <div className="flex items-center gap-2">
@@ -39,14 +39,13 @@ export function ProductRecommendations({
                 </section>
             )}
 
-            {/* AI Recommendations */}
             {recsVisible && (
                 <section className="space-y-4">
                     <div className="flex items-center gap-2">
                         <Sparkles className="h-5 w-5 text-amber-500" />
                         <h2 className="text-xl font-extrabold">You May Also Like</h2>
                         {recsData?.source === 'multi_knn' && (
-                            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-700 font-bold">
+                            <Badge variant="secondary" className="bg-emerald-500/10 font-bold text-emerald-700">
                                 AI Powered
                             </Badge>
                         )}
@@ -86,8 +85,8 @@ function RecommendationCard({ product: p }: { product: ShopProduct }) {
                 <div className="flex flex-col p-3">
                     <h3 className="line-clamp-2 text-sm font-medium group-hover:text-primary">{p.name}</h3>
                     <div className="mt-4 flex items-center justify-between">
-                        <span className="text-base font-bold">£{p.price.toFixed(2)}</span>
-                        <span className="text-[10px] text-muted-foreground font-bold">{p.purchase_count} sold</span>
+                        <span className="text-base font-bold">{formatCurrency(p.price)}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground">{p.purchase_count} sold</span>
                     </div>
                 </div>
             </Card>
@@ -113,14 +112,14 @@ function AIRecommendationCard({ rec: r }: { rec: ShopRecommendation }) {
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                         loading="lazy"
                     />
-                    <Badge variant="secondary" className="absolute left-2 top-2 bg-background/80 backdrop-blur-sm text-[10px] font-bold">
+                    <Badge variant="secondary" className="absolute left-2 top-2 bg-background/80 text-[10px] font-bold backdrop-blur-sm">
                         {r.category}
                     </Badge>
                 </div>
                 <div className="flex flex-col p-3">
                     <h3 className="line-clamp-2 text-sm font-medium group-hover:text-primary">{r.name}</h3>
                     <div className="mt-4 flex items-center justify-between">
-                        <span className="text-base font-bold">£{r.price.toFixed(2)}</span>
+                        <span className="text-base font-bold">{formatCurrency(r.price)}</span>
                     </div>
                 </div>
             </Card>

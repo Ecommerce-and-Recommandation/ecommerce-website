@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useAuth } from '@/lib/auth';
 import { useState, useMemo } from 'react';
 import { useCart } from '@/hooks/useCart';
+import { queryKeys } from '@/lib/queryKeys';
+import { calculatePromotionDiscount, formatCurrency } from '@/lib/pricing';
 import { shopService } from '@/services/shopService';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -46,7 +48,7 @@ function CheckoutPage() {
 
     const checkoutItems = useMemo(() => {
         if (!cart) return [];
-        return cart.items.filter(i => itemIds.includes(i.id));
+        return cart.items.filter((i) => itemIds.includes(i.id));
     }, [cart, itemIds]);
 
     const subtotal = useMemo(() => {
@@ -57,9 +59,9 @@ function CheckoutPage() {
 
     const discountAmount = useMemo(() => {
         if (!promoId || !availablePromos) return 0;
-        const promo = availablePromos.find(p => p.id === promoId);
+        const promo = availablePromos.find((p) => p.id === promoId);
         if (!promo) return 0;
-        return promo.discount_type === 'PERCENTAGE' ? (subtotal * promo.discount_value) / 100 : promo.discount_value;
+        return calculatePromotionDiscount(subtotal, promo);
     }, [promoId, availablePromos, subtotal]);
 
     const total = Math.max(0, subtotal - discountAmount);
@@ -79,7 +81,7 @@ function CheckoutPage() {
     async function handleCheckout(e: React.SyntheticEvent) {
         e.preventDefault();
         setError('');
-        
+
         if (!address.trim() || !phone.trim()) {
             setError('Please provide a valid shipping address and phone number.');
             return;
@@ -88,7 +90,7 @@ function CheckoutPage() {
         setIsSubmitting(true);
         try {
             await shopService.checkout(itemIds, promoId, address, phone);
-            void queryClient.invalidateQueries({ queryKey: ['cart'] });
+            void queryClient.invalidateQueries({ queryKey: queryKeys.cart });
             void navigate({ to: '/orders' });
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to place order.');
@@ -158,16 +160,14 @@ function CheckoutPage() {
                             <CardTitle>Order Items</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {checkoutItems.map(item => (
+                            {checkoutItems.map((item) => (
                                 <div key={item.id} className="flex gap-4 items-center border-b pb-4 last:border-0 last:pb-0">
                                     <img src={item.product_image || '/placeholder.jpg'} alt={item.product_name} className="w-16 h-16 object-cover rounded-lg border" />
                                     <div className="flex-1">
                                         <h4 className="font-semibold line-clamp-1">{item.product_name}</h4>
                                         <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                     </div>
-                                    <div className="font-bold text-lg">
-                                        ${(item.product_price * item.quantity).toFixed(2)}
-                                    </div>
+                                    <div className="font-bold text-lg">{formatCurrency(item.product_price * item.quantity)}</div>
                                 </div>
                             ))}
                         </CardContent>
@@ -183,7 +183,7 @@ function CheckoutPage() {
                         <CardContent className="space-y-4">
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Subtotal ({checkoutItems.length} items)</span>
-                                <span>${subtotal.toFixed(2)}</span>
+                                <span>{formatCurrency(subtotal)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Shipping</span>
@@ -192,12 +192,12 @@ function CheckoutPage() {
                             {discountAmount > 0 && (
                                 <div className="flex justify-between text-sm text-emerald-600">
                                     <span>Discount Applied</span>
-                                    <span>-${discountAmount.toFixed(2)}</span>
+                                    <span>-{formatCurrency(discountAmount)}</span>
                                 </div>
                             )}
                             <div className="border-t pt-4 flex justify-between font-bold text-xl">
                                 <span>Total</span>
-                                <span>${total.toFixed(2)}</span>
+                                <span>{formatCurrency(total)}</span>
                             </div>
                         </CardContent>
                         <CardFooter>
