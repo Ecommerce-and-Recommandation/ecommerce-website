@@ -1,13 +1,14 @@
+import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { useAdminOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
+import { useAdminOrders } from '@/hooks/useOrders';
 import { Loader2, PackageSearch, TrendingUp, DollarSign, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 function AdminOrdersPage() {
     const { data: orders, isLoading } = useAdminOrders();
-    const updateStatus = useUpdateOrderStatus();
+    const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
     if (isLoading) {
         return (
@@ -81,12 +82,16 @@ function AdminOrdersPage() {
                                     <th className="px-6 py-3 font-medium">Total Price</th>
                                     <th className="px-6 py-3 font-medium">Discount</th>
                                     <th className="px-6 py-3 font-medium">Date</th>
-                                    <th className="px-6 py-3 font-medium right-0">Status Action</th>
+                                    <th className="px-6 py-3 font-medium right-0">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y">
                                 {orders.map((order) => (
-                                    <tr key={order.id} className="hover:bg-muted/10 transition-colors">
+                                    <tr
+                                        key={order.id}
+                                        className="hover:bg-muted/10 transition-colors cursor-pointer"
+                                        onClick={() => setSelectedOrder(order)}
+                                    >
                                         <td className="px-6 py-4 font-bold uppercase">
                                             #{order.id} (User {order.user_id})
                                         </td>
@@ -110,24 +115,9 @@ function AdminOrdersPage() {
                                             {new Date(order.created_at).toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <Select
-                                                value={order.status}
-                                                onValueChange={(val) => {
-                                                    updateStatus.mutate({ id: order.id, status: val });
-                                                }}
-                                                disabled={updateStatus.isPending && updateStatus.variables.id === order.id}
-                                            >
-                                                <SelectTrigger className="w-[140px] h-8 text-xs font-bold">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {['PENDING', 'COMPLETED', 'DELIVERED', 'CANCELED'].map((s) => (
-                                                        <SelectItem key={s} value={s} className="font-bold">
-                                                            {s}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <Badge variant={order.status === 'COMPLETED' ? 'default' : 'secondary'} className="font-bold text-xs">
+                                                {order.status}
+                                            </Badge>
                                         </td>
                                     </tr>
                                 ))}
@@ -136,6 +126,79 @@ function AdminOrdersPage() {
                     </div>
                 )}
             </Card>
+
+            <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Order Details #{selectedOrder?.id}</DialogTitle>
+                        <DialogDescription>Placed on {selectedOrder ? new Date(selectedOrder.created_at).toLocaleString() : ''}</DialogDescription>
+                    </DialogHeader>
+
+                    {selectedOrder && (
+                        <div className="mt-4 space-y-6">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p className="font-semibold text-muted-foreground">User ID</p>
+                                    <p className="font-medium">{selectedOrder.user_id}</p>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-muted-foreground">Status</p>
+                                    <Badge variant={selectedOrder.status === 'COMPLETED' ? 'default' : 'secondary'} className="mt-1 font-bold">
+                                        {selectedOrder.status}
+                                    </Badge>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="text-sm font-semibold text-muted-foreground mb-3">Order Items</h3>
+                                <div className="rounded-md border">
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-muted/50 text-muted-foreground">
+                                            <tr>
+                                                <th className="px-4 py-2 text-left font-medium">Product</th>
+                                                <th className="px-4 py-2 text-center font-medium">Qty</th>
+                                                <th className="px-4 py-2 text-right font-medium">Price</th>
+                                                <th className="px-4 py-2 text-right font-medium">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {selectedOrder.items.map((item: any) => (
+                                                <tr key={item.id}>
+                                                    <td className="px-4 py-3">
+                                                        <div className="font-medium">{item.product_name}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-center">{item.quantity}</td>
+                                                    <td className="px-4 py-3 text-right">£{item.price_at_time.toFixed(2)}</td>
+                                                    <td className="px-4 py-3 text-right font-medium">
+                                                        £{(item.price_at_time * item.quantity).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end text-sm">
+                                <div className="w-64 space-y-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Subtotal</span>
+                                        <span>£{(selectedOrder.total_amount + selectedOrder.discount_amount).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-destructive">
+                                        <span>Discount</span>
+                                        <span>-£{selectedOrder.discount_amount.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                                        <span>Total</span>
+                                        <span>£{selectedOrder.total_amount.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

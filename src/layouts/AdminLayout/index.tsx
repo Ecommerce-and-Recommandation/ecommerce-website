@@ -63,6 +63,7 @@ function NavLink({ to, icon, children }: { to: string; icon: React.ReactNode; ch
     return (
         <Link
             to={to}
+            activeOptions={{ exact: true }}
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground [&.active]:bg-accent [&.active]:text-foreground"
         >
             {icon}

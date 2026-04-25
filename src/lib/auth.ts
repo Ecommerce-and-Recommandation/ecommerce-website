@@ -115,6 +115,25 @@ api.interceptors.response.use(
     },
 );
 
+// ── Validate session on app start ──────────────────────
+
+async function validateSession() {
+    const { token } = auth.getState();
+    if (!token) return;
+    try {
+        const res = await api.get('/auth/me', {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        // Update user data from server (may have changed)
+        persist({ token, user: res.data });
+    } catch {
+        // Token invalid/expired – clear stale session
+        persist({ token: null, user: null });
+    }
+}
+
+validateSession();
+
 // ── React hook ─────────────────────────────────────────
 
 export function useAuth() {
