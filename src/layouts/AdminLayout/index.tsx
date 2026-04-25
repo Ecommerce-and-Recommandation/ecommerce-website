@@ -43,7 +43,12 @@ export function AdminLayout() {
                 <div className="border-t px-4 py-3">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{user?.name}</span>
-                        <button onClick={() => logout()} className="hover:text-red-400">
+                        <button
+                            onClick={() => {
+                                void logout();
+                            }}
+                            className="hover:text-red-400"
+                        >
                             <LogOut className="h-3.5 w-3.5" />
                         </button>
                     </div>

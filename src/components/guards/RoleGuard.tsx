@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { useUser } from '@/contexts/UserContext';
+import { useUser } from '@/contexts/useUser';
 
 interface RoleGuardProps {
     children: ReactNode;

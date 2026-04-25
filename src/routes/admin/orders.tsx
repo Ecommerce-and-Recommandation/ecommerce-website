@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/pricing';
+import type { OrderData, OrderItemData } from '@/types/orderTypes';
 
 function AdminOrdersPage() {
     const { data: orders, isLoading } = useAdminOrders();
-    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [selectedOrder, setSelectedOrder] = useState<OrderData | null>(null);
 
     if (isLoading) {
         return (
@@ -90,7 +91,9 @@ function AdminOrdersPage() {
                                     <tr
                                         key={order.id}
                                         className="cursor-pointer transition-colors hover:bg-muted/10"
-                                        onClick={() => setSelectedOrder(order)}
+                                        onClick={() => {
+                                            setSelectedOrder(order);
+                                        }}
                                     >
                                         <td className="px-6 py-4 font-bold uppercase">
                                             #{order.id} (User {order.user_id})
@@ -127,7 +130,14 @@ function AdminOrdersPage() {
                 )}
             </Card>
 
-            <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+            <Dialog
+                open={!!selectedOrder}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setSelectedOrder(null);
+                    }
+                }}
+            >
                 <DialogContent className="max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>Order Details #{selectedOrder?.id}</DialogTitle>
@@ -162,7 +172,7 @@ function AdminOrdersPage() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y">
-                                            {selectedOrder.items.map((item: any) => (
+                                            {selectedOrder.items.map((item: OrderItemData) => (
                                                 <tr key={item.id}>
                                                     <td className="px-4 py-3">
                                                         <div className="font-medium">{item.product_name}</div>

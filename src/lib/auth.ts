@@ -5,16 +5,7 @@
 
 import { apiClient as api } from '@/services/apiClient';
 import { useSyncExternalStore } from 'react';
-
-interface AuthUser {
-    id: number;
-    email: string;
-    name: string;
-    country: string;
-    phone?: string;
-    address?: string;
-    is_admin: boolean;
-}
+import type { AuthResponse, AuthUser } from '@/types/authTypes';
 
 interface AuthState {
     token: string | null;
@@ -59,7 +50,7 @@ export const auth = {
     },
 
     login: async (email: string, password: string) => {
-        const res = await api.post<{ access_token: string; user: AuthUser }>('/auth/login', {
+        const res = await api.post<AuthResponse>('/auth/login', {
             email,
             password,
         });
@@ -68,7 +59,7 @@ export const auth = {
     },
 
     register: async (email: string, password: string, name: string, phone: string, address: string) => {
-        const res = await api.post<{ access_token: string; user: AuthUser }>('/auth/register', {
+        const res = await api.post<AuthResponse>('/auth/register', {
             email,
             password,
             name,
@@ -109,7 +100,7 @@ api.interceptors.response.use(
     (err: unknown) => {
         const error = err as { response?: { status?: number } };
         if (error.response?.status === 401) {
-            auth.logout();
+            void auth.logout();
         }
         return Promise.reject(err instanceof Error ? err : new Error(String(err)));
     },
@@ -121,7 +112,7 @@ async function validateSession() {
     const { token } = auth.getState();
     if (!token) return;
     try {
-        const res = await api.get('/auth/me', {
+        const res = await api.get<AuthUser>('/auth/me', {
             headers: { Authorization: `Bearer ${token}` },
         });
         // Update user data from server (may have changed)
@@ -132,7 +123,7 @@ async function validateSession() {
     }
 }
 
-validateSession();
+void validateSession();
 
 // ── React hook ─────────────────────────────────────────
 

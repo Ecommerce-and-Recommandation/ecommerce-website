@@ -35,8 +35,8 @@ function CheckoutPage() {
     const { data: cart } = useCart();
     const queryClient = useQueryClient();
 
-    const [address, setAddress] = useState(user?.address || '');
-    const [phone, setPhone] = useState(user?.phone || '');
+    const [address, setAddress] = useState(user?.address ?? '');
+    const [phone, setPhone] = useState(user?.phone ?? '');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
 
@@ -98,6 +98,10 @@ function CheckoutPage() {
         }
     }
 
+    function handleCheckoutSubmit(e: React.SyntheticEvent) {
+        void handleCheckout(e);
+    }
+
     return (
         <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
             <div className="flex items-center gap-3">
@@ -115,7 +119,7 @@ function CheckoutPage() {
                             <CardTitle>Shipping Information</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <form id="checkout-form" onSubmit={handleCheckout} className="space-y-4">
+                            <form id="checkout-form" onSubmit={handleCheckoutSubmit} className="space-y-4">
                                 {error && (
                                     <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg border border-destructive/20">
                                         {error}
@@ -133,22 +137,26 @@ function CheckoutPage() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="phone" className="flex items-center gap-2"><Phone className="h-4 w-4"/> Phone Number</Label>
-                                    <Input 
-                                        id="phone" 
-                                        value={phone} 
-                                        onChange={e => setPhone(e.target.value)} 
-                                        placeholder="Enter your phone number" 
-                                        required 
+                                    <Input
+                                        id="phone"
+                                        value={phone}
+                                        onChange={(e) => {
+                                            setPhone(e.target.value);
+                                        }}
+                                        placeholder="Enter your phone number"
+                                        required
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="address" className="flex items-center gap-2"><MapPin className="h-4 w-4"/> Shipping Address</Label>
-                                    <Input 
-                                        id="address" 
-                                        value={address} 
-                                        onChange={e => setAddress(e.target.value)} 
-                                        placeholder="Enter your full delivery address" 
-                                        required 
+                                    <Input
+                                        id="address"
+                                        value={address}
+                                        onChange={(e) => {
+                                            setAddress(e.target.value);
+                                        }}
+                                        placeholder="Enter your full delivery address"
+                                        required
                                     />
                                 </div>
                             </form>

@@ -13,11 +13,9 @@ function AuthPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    // Login state
     const [email, setEmail] = useState('demo@shop.com');
     const [password, setPassword] = useState('demo1234');
 
-    // Register state
     const [regEmail, setRegEmail] = useState('');
     const [regPassword, setRegPassword] = useState('');
     const [regName, setRegName] = useState('');
@@ -32,7 +30,7 @@ function AuthPage() {
             await auth.login(email, password);
             void navigate({ to: '/' });
         } catch {
-            setError('Email hoặc mật khẩu không đúng');
+            setError('Email hoac mat khau khong dung');
         } finally {
             setLoading(false);
         }
@@ -46,37 +44,43 @@ function AuthPage() {
             await auth.register(regEmail, regPassword, regName, regPhone, regAddress);
             void navigate({ to: '/' });
         } catch {
-            setError('Đăng ký thất bại. Email có thể đã tồn tại.');
+            setError('Dang ky that bai. Email co the da ton tai.');
         } finally {
             setLoading(false);
         }
     }
 
+    function handleLoginSubmit(e: React.SyntheticEvent) {
+        void handleLogin(e);
+    }
+
+    function handleRegisterSubmit(e: React.SyntheticEvent) {
+        void handleRegister(e);
+    }
+
     return (
-        <div className="flex min-h-screen items-center justify-center p-4 bg-background">
+        <div className="flex min-h-screen items-center justify-center bg-background p-4">
             <div className="w-full max-w-md space-y-8">
-                <div className="text-center space-y-2">
+                <div className="space-y-2 text-center">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
                         <ShoppingBag className="h-8 w-8" />
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight">
-                        {isLogin ? 'Welcome Back' : 'Create Account'}
-                    </h1>
-                    <p className="text-muted-foreground text-sm">
+                    <h1 className="text-3xl font-bold tracking-tight">{isLogin ? 'Welcome Back' : 'Create Account'}</h1>
+                    <p className="text-sm text-muted-foreground">
                         {isLogin ? 'Sign in to continue shopping' : 'Join us to start shopping'}
                     </p>
                 </div>
 
-                <Card className="border-none shadow-2xl bg-card">
+                <Card className="border-none bg-card shadow-2xl">
                     {isLogin ? (
                         <>
                             <CardHeader className="space-y-1">
                                 <CardDescription className="text-center">Demo: demo@shop.com / demo1234</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <form onSubmit={handleLogin} className="space-y-4">
+                                <form onSubmit={handleLoginSubmit} className="space-y-4">
                                     {error && (
-                                        <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive font-medium border border-destructive/20">
+                                        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
                                             {error}
                                         </div>
                                     )}
@@ -86,8 +90,11 @@ function AuthPage() {
                                             id="email"
                                             type="email"
                                             value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            required className="h-12"
+                                            onChange={(e) => {
+                                                setEmail(e.target.value);
+                                            }}
+                                            required
+                                            className="h-12"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -96,12 +103,15 @@ function AuthPage() {
                                             id="password"
                                             type="password"
                                             value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            required className="h-12"
+                                            onChange={(e) => {
+                                                setPassword(e.target.value);
+                                            }}
+                                            required
+                                            className="h-12"
                                         />
                                     </div>
-                                    <Button type="submit" className="w-full h-12 font-bold text-base mt-2" disabled={loading}>
-                                        {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                                    <Button type="submit" className="mt-2 h-12 w-full text-base font-bold" disabled={loading}>
+                                        {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
                                         Sign In
                                     </Button>
                                 </form>
@@ -109,34 +119,76 @@ function AuthPage() {
                         </>
                     ) : (
                         <CardContent className="pt-6">
-                            <form onSubmit={handleRegister} className="space-y-4">
+                            <form onSubmit={handleRegisterSubmit} className="space-y-4">
                                 {error && (
-                                    <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive font-medium border border-destructive/20">
+                                    <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
                                         {error}
                                     </div>
                                 )}
                                 <div className="space-y-2">
                                     <Label htmlFor="regName">Full Name</Label>
-                                    <Input id="regName" value={regName} onChange={(e) => setRegName(e.target.value)} required className="h-12" />
+                                    <Input
+                                        id="regName"
+                                        value={regName}
+                                        onChange={(e) => {
+                                            setRegName(e.target.value);
+                                        }}
+                                        required
+                                        className="h-12"
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="regEmail">Email</Label>
-                                    <Input id="regEmail" type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} required className="h-12" />
+                                    <Input
+                                        id="regEmail"
+                                        type="email"
+                                        value={regEmail}
+                                        onChange={(e) => {
+                                            setRegEmail(e.target.value);
+                                        }}
+                                        required
+                                        className="h-12"
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="regPassword">Password</Label>
-                                    <Input id="regPassword" type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} required className="h-12" />
+                                    <Input
+                                        id="regPassword"
+                                        type="password"
+                                        value={regPassword}
+                                        onChange={(e) => {
+                                            setRegPassword(e.target.value);
+                                        }}
+                                        required
+                                        className="h-12"
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="regPhone">Phone Number</Label>
-                                    <Input id="regPhone" value={regPhone} onChange={(e) => setRegPhone(e.target.value)} required className="h-12" />
+                                    <Input
+                                        id="regPhone"
+                                        value={regPhone}
+                                        onChange={(e) => {
+                                            setRegPhone(e.target.value);
+                                        }}
+                                        required
+                                        className="h-12"
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="regAddress">Shipping Address</Label>
-                                    <Input id="regAddress" value={regAddress} onChange={(e) => setRegAddress(e.target.value)} required className="h-12" />
+                                    <Input
+                                        id="regAddress"
+                                        value={regAddress}
+                                        onChange={(e) => {
+                                            setRegAddress(e.target.value);
+                                        }}
+                                        required
+                                        className="h-12"
+                                    />
                                 </div>
-                                <Button type="submit" className="w-full h-12 font-bold text-base mt-2" disabled={loading}>
-                                    {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                                <Button type="submit" className="mt-2 h-12 w-full text-base font-bold" disabled={loading}>
+                                    {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
                                     Create Account
                                 </Button>
                             </form>
@@ -144,8 +196,14 @@ function AuthPage() {
                     )}
 
                     <CardFooter className="flex flex-col items-center gap-4 pb-6">
-                        <Button variant="link" onClick={() => setIsLogin(!isLogin)} className="text-sm">
-                            {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                        <Button
+                            variant="link"
+                            onClick={() => {
+                                setIsLogin(!isLogin);
+                            }}
+                            className="text-sm"
+                        >
+                            {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
                         </Button>
                         <p className="text-xs text-muted-foreground">© 2026 Ecommerce Platform</p>
                     </CardFooter>

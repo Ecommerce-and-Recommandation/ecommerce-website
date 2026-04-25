@@ -40,13 +40,13 @@ function ProfilePage() {
                             <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                 <Phone className="h-4 w-4" /> Phone Number
                             </label>
-                            <p className="font-medium text-lg">{user.phone || 'Not provided'}</p>
+                            <p className="font-medium text-lg">{user.phone ?? 'Not provided'}</p>
                         </div>
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                 <MapPin className="h-4 w-4" /> Default Shipping Address
                             </label>
-                            <p className="font-medium text-lg">{user.address || 'Not provided'}</p>
+                            <p className="font-medium text-lg">{user.address ?? 'Not provided'}</p>
                         </div>
                     </div>
                     {user.is_admin && (
