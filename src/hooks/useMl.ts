@@ -1,11 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
 import { mlService } from '@/services/mlService';
 import { shopService } from '@/services/shopService';
 import type { CustomerFeatures } from '@/types/customerTypes';
 
 export function useHealth() {
     return useQuery({
-        queryKey: ['health'],
+        queryKey: queryKeys.health,
         queryFn: mlService.health,
         refetchInterval: 30_000,
     });
@@ -13,21 +14,21 @@ export function useHealth() {
 
 export function useModelInfo() {
     return useQuery({
-        queryKey: ['modelInfo'],
+        queryKey: queryKeys.modelInfo,
         queryFn: mlService.modelInfo,
     });
 }
 
 export function useSegmentsOverview() {
     return useQuery({
-        queryKey: ['segmentsOverview'],
+        queryKey: queryKeys.segmentsOverview,
         queryFn: mlService.segmentsOverview,
     });
 }
 
 export function useRecommendations(stockCode: string, topK = 10) {
     return useQuery({
-        queryKey: ['recommend', stockCode, topK],
+        queryKey: queryKeys.recommendations(stockCode, topK),
         queryFn: () => mlService.recommend(stockCode, topK),
         enabled: !!stockCode,
     });
@@ -49,7 +50,7 @@ export function useShopRecommendations(currentProductId?: number) {
     const enabled = currentProductId !== -1;
     const pid = currentProductId && currentProductId > 0 ? currentProductId : undefined;
     return useQuery({
-        queryKey: ['shopRecommendations', pid ?? null],
+        queryKey: queryKeys.shopRecommendations(pid),
         queryFn: () => shopService.recommendations(pid),
         enabled,
         staleTime: 0,
@@ -59,7 +60,7 @@ export function useShopRecommendations(currentProductId?: number) {
 
 export function useBehaviorProfile() {
     return useQuery({
-        queryKey: ['behaviorProfile'],
+        queryKey: queryKeys.behaviorProfile,
         queryFn: shopService.behaviorProfile,
     });
 }

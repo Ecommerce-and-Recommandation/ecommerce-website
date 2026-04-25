@@ -1,17 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
 import { promotionService } from '@/services/promotionService';
 import type { PromotionData } from '@/types/promotionTypes';
 
 export function useAdminPromotions() {
     return useQuery({
-        queryKey: ['admin-promos'],
+        queryKey: queryKeys.adminPromotions,
         queryFn: promotionService.getPromotions,
     });
 }
 
 export function useAvailablePromotions(cartTotal: number) {
     return useQuery({
-        queryKey: ['available-promos', cartTotal],
+        queryKey: queryKeys.availablePromotions(cartTotal),
         queryFn: () => promotionService.getAvailablePromotions(cartTotal),
         enabled: cartTotal > 0,
     });
@@ -19,7 +20,7 @@ export function useAvailablePromotions(cartTotal: number) {
 
 export function useAdminPromoSuggestions() {
     return useQuery({
-        queryKey: ['admin-promo-suggestions'],
+        queryKey: queryKeys.adminPromoSuggestions,
         queryFn: promotionService.getSuggestions,
     });
 }
@@ -29,8 +30,8 @@ export function useCreatePromotion() {
     return useMutation({
         mutationFn: (data: Partial<PromotionData>) => promotionService.createPromotion(data),
         onSuccess: () => {
-            void qc.invalidateQueries({ queryKey: ['admin-promos'] });
-            void qc.invalidateQueries({ queryKey: ['admin-promo-suggestions'] });
+            void qc.invalidateQueries({ queryKey: queryKeys.adminPromotions });
+            void qc.invalidateQueries({ queryKey: queryKeys.adminPromoSuggestions });
         },
     });
 }
@@ -39,7 +40,7 @@ export function useDeletePromotion() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (id: number) => promotionService.deletePromotion(id),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-promos'] }),
+        onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.adminPromotions }),
     });
 }
 

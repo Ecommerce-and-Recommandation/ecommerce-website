@@ -12,6 +12,7 @@
 
 import { apiClient as api } from '@/services/apiClient';
 import { auth } from './auth';
+import { queryKeys } from './queryKeys';
 import { queryClient } from './queryClient';
 
 interface TrackerEvent {
@@ -34,7 +35,7 @@ async function flush() {
     try {
         await api.post('/behavior/track', { events: batch });
         // Invalidate recommendation cache so UI picks up new behavior data
-        void queryClient.invalidateQueries({ queryKey: ['shopRecommendations'] });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.shopRecommendations() });
     } catch {
         // Put events back on failure
         buffer = [...batch, ...buffer];

@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Loader2 } from 'lucide-react';
+import { formatCurrency } from '@/lib/pricing';
 import { tracker } from '@/lib/tracker';
 import type { BehaviorRecommendationsResponse, ShopRecommendation } from '@/types/productTypes';
 
@@ -24,7 +25,7 @@ export function ShopRecommendations({ data: recs, isLoading, isVisible }: ShopRe
                         {recs.source === 'multi_knn' && (
                             <Badge
                                 variant="secondary"
-                                className="bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/10 hover:text-emerald-700 font-bold"
+                                className="bg-emerald-500/10 font-bold text-emerald-700 hover:bg-emerald-500/10 hover:text-emerald-700"
                             >
                                 AI Powered
                             </Badge>
@@ -76,7 +77,7 @@ function RecommendationCard({ rec: r, source }: { rec: ShopRecommendation; sourc
                         </Badge>
                     </div>
                     <div className="mt-4 flex items-center justify-between">
-                        <span className="text-base font-bold">£{r.price.toFixed(2)}</span>
+                        <span className="text-base font-bold">{formatCurrency(r.price)}</span>
                     </div>
                 </div>
             </Card>

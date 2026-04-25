@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency, formatPromotionValue } from '@/lib/pricing';
 import type { PromotionData } from '@/types/promotionTypes';
 
 interface OrderSummaryProps {
@@ -18,7 +19,7 @@ export function OrderSummary({ selectedCount, selectedTotal, discountData, avail
     const finalTotal = Math.max(0, selectedTotal - discountData.amount);
 
     return (
-        <Card className="h-fit sticky top-24 shadow-sm border-muted-foreground/10">
+        <Card className="sticky top-24 h-fit border-muted-foreground/10 shadow-sm">
             <CardHeader>
                 <CardTitle className="text-lg font-bold">Order Summary</CardTitle>
             </CardHeader>
@@ -26,24 +27,24 @@ export function OrderSummary({ selectedCount, selectedTotal, discountData, avail
                 <div className="space-y-3">
                     <div className="flex justify-between text-sm text-muted-foreground">
                         <span>Subtotal ({selectedCount} items)</span>
-                        <span>£{selectedTotal.toFixed(2)}</span>
+                        <span>{formatCurrency(selectedTotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-muted-foreground">
                         <span>Shipping</span>
-                        <span className="text-primary font-bold">Free</span>
+                        <span className="font-bold text-primary">Free</span>
                     </div>
 
                     {discountData.valid && (
-                        <div className="flex justify-between text-sm text-primary font-bold animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="animate-in fade-in slide-in-from-top-1 flex justify-between text-sm font-bold text-primary duration-200">
                             <span>{availablePromos?.find((p) => p.id === discountData.id)?.code ?? 'Discount'}</span>
-                            <span>-£{discountData.amount.toFixed(2)}</span>
+                            <span>-{formatCurrency(discountData.amount)}</span>
                         </div>
                     )}
 
                     <Separator className="bg-muted-foreground/10" />
                     <div className="flex justify-between text-lg font-extrabold">
                         <span>Total</span>
-                        <span>£{finalTotal.toFixed(2)}</span>
+                        <span>{formatCurrency(finalTotal)}</span>
                     </div>
                 </div>
 
@@ -60,26 +61,22 @@ export function OrderSummary({ selectedCount, selectedTotal, discountData, avail
                             <SelectItem value="none">No promotion</SelectItem>
                             {availablePromos?.map((promo) => (
                                 <SelectItem key={promo.id} value={String(promo.id)}>
-                                    <div className="flex justify-between items-center w-full gap-4">
+                                    <div className="flex w-full items-center justify-between gap-4">
                                         <span className="font-bold">{promo.code}</span>
-                                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold">
-                                            {promo.discount_type === 'PERCENTAGE'
-                                                ? `-${promo.discount_value.toString()}%`
-                                                : `-£${promo.discount_value.toString()}`}
+                                        <Badge variant="secondary" className="border-none bg-primary/10 font-bold text-primary">
+                                            {formatPromotionValue(promo)}
                                         </Badge>
                                     </div>
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
-                    {discountData.message && !discountData.valid && (
-                        <p className="text-[11px] font-bold text-destructive px-1">{discountData.message}</p>
-                    )}
+                    {discountData.message && !discountData.valid && <p className="px-1 text-[11px] font-bold text-destructive">{discountData.message}</p>}
                 </div>
 
                 <Button
                     size="lg"
-                    className="w-full font-bold text-base h-12 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                    className="h-12 w-full text-base font-bold transition-all hover:scale-[1.01] active:scale-[0.99]"
                     onClick={onCheckout}
                     disabled={selectedCount === 0}
                 >

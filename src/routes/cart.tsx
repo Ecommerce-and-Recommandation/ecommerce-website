@@ -3,8 +3,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { useCart, useRemoveFromCart, useUpdateCartItem } from '@/hooks/useCart';
 import { useAvailablePromotions } from '@/hooks/usePromotions';
 import { Loader2, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { calculatePromotionDiscount } from '@/lib/pricing';
 import { tracker } from '@/lib/tracker';
-import { useQueryClient } from '@tanstack/react-query';
 import { CartGroup } from '@/components/cart/cartGroup';
 import { OrderSummary } from '@/components/cart/orderSummary';
 import type { CartItemData } from '@/types/cartTypes';
@@ -23,7 +23,6 @@ function CartPage() {
     });
 
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
 
     const { selectedTotal, selectedCount } = useMemo(() => {
         let total = 0;
@@ -47,8 +46,7 @@ function CartPage() {
             if (!promo) {
                 setDiscountData({ valid: false, message: 'Promotion no longer valid.', amount: 0, id: null });
             } else {
-                const amount = promo.discount_type === 'PERCENTAGE' ? (selectedTotal * promo.discount_value) / 100 : promo.discount_value;
-                setDiscountData((prev) => ({ ...prev, amount }));
+                setDiscountData((prev) => ({ ...prev, amount: calculatePromotionDiscount(selectedTotal, promo) }));
             }
         }
     }, [availablePromos, discountData.valid, discountData.id, selectedTotal]);
@@ -166,8 +164,12 @@ function CartPage() {
                         }
                         const promo = availablePromos?.find((p) => p.id === parseInt(pId));
                         if (!promo) return;
-                        const amount = promo.discount_type === 'PERCENTAGE' ? (selectedTotal * promo.discount_value) / 100 : promo.discount_value;
-                        setDiscountData({ valid: true, message: 'Applied!', amount, id: promo.id });
+                        setDiscountData({
+                            valid: true,
+                            message: 'Applied!',
+                            amount: calculatePromotionDiscount(selectedTotal, promo),
+                            id: promo.id,
+                        });
                     }}
                     onCheckout={handleProceedToCheckout}
                 />
