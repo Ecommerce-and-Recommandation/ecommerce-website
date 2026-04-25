@@ -42,7 +42,9 @@ export function ShopLayout() {
                                 <Input
                                     type="text"
                                     value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
+                                    onChange={(e) => {
+                                        setSearch(e.target.value);
+                                    }}
                                     placeholder="Search products..."
                                     className="pl-10 h-10 border-none bg-muted/50 rounded-xl focus-visible:ring-1 focus-visible:ring-primary/20"
                                 />
@@ -91,7 +93,9 @@ export function ShopLayout() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                                onClick={() => logout()}
+                                onClick={() => {
+                                    void logout();
+                                }}
                                 title="Logout"
                             >
                                 <LogOut className="h-3.5 w-3.5" />

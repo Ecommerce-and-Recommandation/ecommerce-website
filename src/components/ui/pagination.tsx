@@ -2,7 +2,8 @@ import * as React from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { buttonVariants, type Button } from '@/components/ui/button';
+import { type ButtonProps } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button/buttonVariants';
 
 function Pagination({ className, ...props }: React.ComponentProps<'nav'>) {
     return (
@@ -26,7 +27,7 @@ function PaginationItem({ ...props }: React.ComponentProps<'li'>) {
 
 type PaginationLinkProps = {
     isActive?: boolean;
-} & Pick<React.ComponentProps<typeof Button>, 'size'> &
+} & Pick<ButtonProps, 'size'> &
     React.ComponentProps<'a'>;
 
 function PaginationLink({ className, isActive, size = 'icon', ...props }: PaginationLinkProps) {
