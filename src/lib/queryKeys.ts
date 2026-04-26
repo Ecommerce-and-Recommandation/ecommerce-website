@@ -2,9 +2,11 @@ export const queryKeys = {
     cart: ['cart'] as const,
     categories: ['categories'] as const,
     myOrders: ['my-orders'] as const,
-    adminOrders: ['admin-orders'] as const,
+    adminOrders: (page: number) => ['admin-orders', page] as const,
     adminPromotions: ['admin-promos'] as const,
     adminPromoSuggestions: ['admin-promo-suggestions'] as const,
+    adminProducts: (params: { category?: string; search?: string; page?: number; page_size?: number }) =>
+        ['admin-products', params] as const,
     health: ['health'] as const,
     modelInfo: ['modelInfo'] as const,
     segmentsOverview: ['segmentsOverview'] as const,

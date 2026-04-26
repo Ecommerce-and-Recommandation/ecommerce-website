@@ -9,11 +9,11 @@ export function useMyOrders() {
     });
 }
 
-export function useAdminOrders() {
+export function useAdminOrders(page = 1, pageSize = 20) {
     return useQuery({
-        queryKey: queryKeys.adminOrders,
-        queryFn: orderService.getAdminOrders,
-        refetchInterval: 15_000,
+        queryKey: queryKeys.adminOrders(page),
+        queryFn: () => orderService.getAdminOrders(page, pageSize),
+        placeholderData: (prev) => prev,
     });
 }
 
@@ -21,6 +21,6 @@ export function useUpdateOrderStatus() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: ({ id, status }: { id: number; status: string }) => orderService.updateOrderStatus(id, status),
-        onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.adminOrders }),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-orders'] }),
     });
 }

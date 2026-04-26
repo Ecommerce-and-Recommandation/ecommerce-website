@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useAdminOrders } from '@/hooks/useOrders';
-import { Loader2, PackageSearch, TrendingUp, DollarSign, Package } from 'lucide-react';
+import { Loader2, PackageSearch, TrendingUp, DollarSign, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { formatCurrency } from '@/lib/pricing';
-import type { OrderData, OrderItemData } from '@/types/orderTypes';
 
 function AdminOrdersPage() {
-    const { data: orders, isLoading } = useAdminOrders();
-    const [selectedOrder, setSelectedOrder] = useState<OrderData | null>(null);
+    const [page, setPage] = useState(1);
+    const { data, isLoading } = useAdminOrders(page, 15);
+    const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
-    if (isLoading) {
+    if (isLoading && !data) {
         return (
             <div className="flex h-64 items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -20,14 +20,16 @@ function AdminOrdersPage() {
         );
     }
 
-    if (!orders) return null;
+    const orders = data?.orders ?? [];
+    const totalPages = data ? Math.ceil(data.total / data.page_size) : 1;
 
+    // Quick Stats
     const totalRevenue = orders.reduce((acc, order) => acc + (order.status !== 'CANCELED' ? order.total_amount : 0), 0);
-    const totalOrders = orders.length;
+    const totalOrders = data?.total ?? 0;
     const pendingOrders = orders.filter((o) => o.status === 'PENDING').length;
 
     return (
-        <div className="animate-in fade-in space-y-8 duration-500">
+        <div className="space-y-8 animate-in fade-in duration-500">
             <div>
                 <h1 className="text-3xl font-extrabold tracking-tight">Manage Orders</h1>
                 <p className="mt-2 text-muted-foreground">Monitor sales, approve pending transactions, and track revenue.</p>
@@ -36,11 +38,11 @@ function AdminOrdersPage() {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Revenue (page)</CardTitle>
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
+                        <div className="text-2xl font-bold">£{totalRevenue.toFixed(2)}</div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -70,55 +72,53 @@ function AdminOrdersPage() {
 
                 {orders.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-                        <PackageSearch className="mb-4 h-12 w-12 opacity-50" />
+                        <PackageSearch className="h-12 w-12 mb-4 opacity-50" />
                         <p>No orders completely logged yet.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+                        <table className="w-full text-sm text-left">
+                            <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
                                 <tr>
                                     <th className="px-6 py-3 font-medium">Order ID</th>
                                     <th className="px-6 py-3 font-medium">Items</th>
                                     <th className="px-6 py-3 font-medium">Total Price</th>
                                     <th className="px-6 py-3 font-medium">Discount</th>
                                     <th className="px-6 py-3 font-medium">Date</th>
-                                    <th className="right-0 px-6 py-3 font-medium">Status</th>
+                                    <th className="px-6 py-3 font-medium right-0">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y">
                                 {orders.map((order) => (
                                     <tr
                                         key={order.id}
-                                        className="cursor-pointer transition-colors hover:bg-muted/10"
-                                        onClick={() => {
-                                            setSelectedOrder(order);
-                                        }}
+                                        className="hover:bg-muted/10 transition-colors cursor-pointer"
+                                        onClick={() => setSelectedOrder(order)}
                                     >
                                         <td className="px-6 py-4 font-bold uppercase">
                                             #{order.id} (User {order.user_id})
                                         </td>
                                         <td className="px-6 py-4">
                                             {order.items.length} items
-                                            <div className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                                            <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
                                                 {order.items.map((i) => i.product_name).join(', ')}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 font-bold">{formatCurrency(order.total_amount)}</td>
+                                        <td className="px-6 py-4 font-bold">£{order.total_amount.toFixed(2)}</td>
                                         <td className="px-6 py-4">
                                             {order.discount_amount > 0 ? (
                                                 <Badge variant="secondary" className="font-bold">
-                                                    -{formatCurrency(order.discount_amount)}
+                                                    -£{order.discount_amount.toFixed(2)}
                                                 </Badge>
                                             ) : (
-                                                <span className="opacity-50 text-muted-foreground">-</span>
+                                                <span className="text-muted-foreground opacity-50">-</span>
                                             )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
                                             {new Date(order.created_at).toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <Badge variant={order.status === 'COMPLETED' ? 'default' : 'secondary'} className="text-xs font-bold">
+                                            <Badge variant={order.status === 'COMPLETED' ? 'default' : 'secondary'} className="font-bold text-xs">
                                                 {order.status}
                                             </Badge>
                                         </td>
@@ -128,16 +128,26 @@ function AdminOrdersPage() {
                         </table>
                     </div>
                 )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between border-t px-6 py-3 text-sm">
+                        <span className="text-muted-foreground">
+                            Page {page} of {totalPages} ({data?.total} orders)
+                        </span>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Card>
 
-            <Dialog
-                open={!!selectedOrder}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setSelectedOrder(null);
-                    }
-                }}
-            >
+            <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
                 <DialogContent className="max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>Order Details #{selectedOrder?.id}</DialogTitle>
@@ -160,7 +170,7 @@ function AdminOrdersPage() {
                             </div>
 
                             <div>
-                                <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Order Items</h3>
+                                <h3 className="text-sm font-semibold text-muted-foreground mb-3">Order Items</h3>
                                 <div className="rounded-md border">
                                     <table className="w-full text-sm">
                                         <thead className="bg-muted/50 text-muted-foreground">
@@ -172,15 +182,15 @@ function AdminOrdersPage() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y">
-                                            {selectedOrder.items.map((item: OrderItemData) => (
+                                            {selectedOrder.items.map((item: any) => (
                                                 <tr key={item.id}>
                                                     <td className="px-4 py-3">
                                                         <div className="font-medium">{item.product_name}</div>
                                                     </td>
                                                     <td className="px-4 py-3 text-center">{item.quantity}</td>
-                                                    <td className="px-4 py-3 text-right">{formatCurrency(item.price_at_time)}</td>
+                                                    <td className="px-4 py-3 text-right">£{item.price_at_time.toFixed(2)}</td>
                                                     <td className="px-4 py-3 text-right font-medium">
-                                                        {formatCurrency(item.price_at_time * item.quantity)}
+                                                        £{(item.price_at_time * item.quantity).toFixed(2)}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -193,15 +203,15 @@ function AdminOrdersPage() {
                                 <div className="w-64 space-y-2">
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Subtotal</span>
-                                        <span>{formatCurrency(selectedOrder.total_amount + selectedOrder.discount_amount)}</span>
+                                        <span>£{(selectedOrder.total_amount + selectedOrder.discount_amount).toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-destructive">
                                         <span>Discount</span>
-                                        <span>-{formatCurrency(selectedOrder.discount_amount)}</span>
+                                        <span>-£{selectedOrder.discount_amount.toFixed(2)}</span>
                                     </div>
-                                    <div className="flex justify-between border-t pt-2 text-lg font-bold">
+                                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
                                         <span>Total</span>
-                                        <span>{formatCurrency(selectedOrder.total_amount)}</span>
+                                        <span>£{selectedOrder.total_amount.toFixed(2)}</span>
                                     </div>
                                 </div>
                             </div>

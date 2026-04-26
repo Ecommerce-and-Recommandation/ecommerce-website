@@ -1,5 +1,5 @@
 import { Link, Outlet } from '@tanstack/react-router';
-import { ShoppingBag, BarChart3, Brain, Package, Users, LogOut, Ticket, Sparkles } from 'lucide-react';
+import { ShoppingBag, BarChart3, Brain, Package, Users, LogOut, Ticket, Sparkles, ShoppingCart } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 export function AdminLayout() {
@@ -23,6 +23,9 @@ export function AdminLayout() {
                     </NavLink>
                     <NavLink to="/admin/orders" icon={<Package className="h-4 w-4" />}>
                         Manage Orders
+                    </NavLink>
+                    <NavLink to="/admin/products" icon={<ShoppingCart className="h-4 w-4" />}>
+                        Manage Products
                     </NavLink>
                     <NavLink to="/admin/promotions" icon={<Ticket className="h-4 w-4" />}>
                         Promotions
