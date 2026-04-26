@@ -1,6 +1,13 @@
+export interface ProductVariant {
+    id: number;
+    stock_code: string;
+    name: string;
+}
+
 export interface ShopProduct {
     id: number;
     stock_code: string;
+    parent_sku: string;
     name: string;
     description: string;
     price: number;
@@ -8,6 +15,7 @@ export interface ShopProduct {
     category: string;
     in_stock: boolean;
     purchase_count: number;
+    variants?: ProductVariant[];
 }
 
 export interface ProductListResponse {
