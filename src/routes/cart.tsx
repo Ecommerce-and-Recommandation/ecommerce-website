@@ -24,32 +24,44 @@ function CartPage() {
 
     const navigate = useNavigate();
 
-    const { selectedTotal, selectedCount } = useMemo(() => {
+    const { selectedTotal, selectedCount, selectedStockCodes } = useMemo(() => {
         let total = 0;
         let count = 0;
+        const stockCodes = new Set<string>();
         if (cart?.items) {
             for (const item of cart.items) {
                 if (selectedItemIds.has(item.id)) {
                     total += item.product_price * item.quantity;
                     count += item.quantity;
+                    stockCodes.add(item.stock_code);
                 }
             }
         }
-        return { selectedTotal: total, selectedCount: count };
+        return { selectedTotal: total, selectedCount: count, selectedStockCodes: stockCodes };
     }, [cart?.items, selectedItemIds]);
 
     const { data: availablePromos } = useAvailablePromotions(selectedTotal);
 
+    // Filter product-specific promos (SALE_xxx) to only show when that product is selected
+    const filteredPromos = useMemo(() => {
+        if (!availablePromos) return undefined;
+        return availablePromos.filter((promo) => {
+            const match = /^SALE_(.+)$/.exec(promo.code);
+            if (!match) return true; // General promos always visible
+            return selectedStockCodes.has(match[1]);
+        });
+    }, [availablePromos, selectedStockCodes]);
+
     useEffect(() => {
-        if (discountData.valid && discountData.id !== null && availablePromos) {
-            const promo = availablePromos.find((p) => p.id === discountData.id);
+        if (discountData.valid && discountData.id !== null && filteredPromos) {
+            const promo = filteredPromos.find((p) => p.id === discountData.id);
             if (!promo) {
                 setDiscountData({ valid: false, message: 'Promotion no longer valid.', amount: 0, id: null });
             } else {
                 setDiscountData((prev) => ({ ...prev, amount: calculatePromotionDiscount(selectedTotal, promo) }));
             }
         }
-    }, [availablePromos, discountData.valid, discountData.id, selectedTotal]);
+    }, [filteredPromos, discountData.valid, discountData.id, selectedTotal]);
 
     const groupedItems = useMemo(() => {
         if (!cart?.items) return {};
@@ -156,13 +168,13 @@ function CartPage() {
                     selectedCount={selectedCount}
                     selectedTotal={selectedTotal}
                     discountData={discountData}
-                    availablePromos={availablePromos}
+                    availablePromos={filteredPromos}
                     onPromoSelect={(pId) => {
                         if (pId === 'none') {
                             setDiscountData({ valid: false, message: '', amount: 0, id: null });
                             return;
                         }
-                        const promo = availablePromos?.find((p) => p.id === parseInt(pId));
+                        const promo = filteredPromos?.find((p) => p.id === parseInt(pId));
                         if (!promo) return;
                         setDiscountData({
                             valid: true,
